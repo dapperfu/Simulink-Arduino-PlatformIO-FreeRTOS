@@ -1,0 +1,22 @@
+%% arduinopio_digital_output.tlc
+%% Inline digital output for the Arduino PIO Embedded Coder target.
+%implements "arduinopio_digital_output" "C"
+
+%function BlockTypeSetup(block, system) void
+  %<LibAddToCommonIncludes("arduinopio_gpio.h")>
+%endfunction
+
+%function Start(block, system) Output
+  /* %<Type> Block: %<Name> */
+  {
+    arduinopioDigitalOutputSetup((uint8_T)%<SFcnParamSettings.Pin>);
+  }
+%endfunction
+
+%function Outputs(block, system) Output
+  /* %<Type> Block: %<Name> */
+  {
+    real_T u = %<LibBlockInputSignal(0, "", "", 0)>;
+    arduinopioDigitalWrite((uint8_T)%<SFcnParamSettings.Pin>, (uint8_T)(u != 0.0));
+  }
+%endfunction

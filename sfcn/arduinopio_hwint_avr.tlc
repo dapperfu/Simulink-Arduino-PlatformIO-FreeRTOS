@@ -1,0 +1,17 @@
+%% arduinopio_hwint_avr.tlc
+%% Inline the AVR hardware-interrupt S-function for Embedded Coder.
+%implements "arduinopio_hwint_avr" "C"
+
+%function BlockTypeSetup(block, system) void
+  %<LibAddToCommonIncludes("arduinopio_hwint_avr.h")>
+%endfunction
+
+%function Start(block, system) Output
+  arduinopioHwIntAvrSetup((uint8_T)%<SFcnParamSettings.SourceId>);
+%endfunction
+
+%function Outputs(block, system) Output
+  if (arduinopioHwIntAvrTake((uint8_T)%<SFcnParamSettings.SourceId>) != 0) {
+    %<LibBlockExecuteFcnCall(block, 0)>
+  }
+%endfunction
