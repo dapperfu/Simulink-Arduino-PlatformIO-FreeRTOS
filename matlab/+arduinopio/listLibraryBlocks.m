@@ -1,6 +1,32 @@
 function blockPaths = listLibraryBlocks()
-%listLibraryBlocks Return leaf block paths in libraries/arduinopio_lib.slx.
+%LISTLIBRARYBLOCKS - Return leaf block paths in libraries/arduinopio_lib.slx.
+%   Loads the library if needed, walks top-level subsystem folders, and collects
+%   leaf blocks. Unmasked nested subsystems contribute their children instead of
+%   themselves. Errors arduinopio:LibraryMissing if the .slx is absent. Package
+%   path: arduinopio.listLibraryBlocks.
+%
+%   Syntax:
+%       blockPaths = arduinopio.listLibraryBlocks()
+%
+%   Inputs:
+%       none
+%
+%   Outputs:
+%       blockPaths - string column. Full paths such as arduinopio_lib/.../Block.
+%
+%   Example:
+%       paths = arduinopio.listLibraryBlocks();
+%
+%   Other m-files required: arduinopio.getRootFolder
+%   Subfunctions: isUnmaskedSubsystem
+%   MAT-files required: none
+%
+%   See also: GETROOTFOLDER, GENERATELIBRARYBLOCKCODE, LISTEXAMPLEMODELS
 
+%   Author: Frey, Jed
+%   28-Sep-2026; Last revision: 28-Sep-2026
+
+%------------- BEGIN CODE --------------
     libName = "arduinopio_lib";
     libPath = fullfile(arduinopio.getRootFolder(), "libraries", libName + ".slx");
     if ~isfile(libPath)
@@ -41,6 +67,22 @@ function blockPaths = listLibraryBlocks()
 end
 
 function tf = isUnmaskedSubsystem(blockPath)
+%ISUNMASKEDSUBSYSTEM - True when blockPath is a SubSystem with Mask off.
+%   Used to expand grouping subsystems into their child leaf blocks.
+%
+%   Syntax:
+%       tf = isUnmaskedSubsystem(blockPath)
+%
+%   Inputs:
+%       blockPath - string. Simulink block path inside the library.
+%
+%   Outputs:
+%       tf - logical. True for unmasked SubSystem blocks.
+%
+%   Example:
+%       tf = isUnmaskedSubsystem("arduinopio_lib/Digital");
+%
+%   See also: LISTLIBRARYBLOCKS
     tf = string(get_param(blockPath, "BlockType")) == "SubSystem" && ...
         string(get_param(blockPath, "Mask")) == "off";
 end

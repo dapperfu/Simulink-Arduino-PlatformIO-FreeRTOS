@@ -1,5 +1,32 @@
 function addFunctionCallBridge(chartPath)
-%addFunctionCallBridge Add a Stateflow chart that turns a boolean into a function-call.
+%ADDFUNCTIONCALLBRIDGE - Add a Stateflow chart that emits a function-call.
+%   Inserts an sflib/Chart at chartPath, sets ActionLanguage to MATLAB, and
+%   defines boolean input Pending plus function-call output event IRQ. A single
+%   Poll state sends IRQ during each step when Pending is true. Used by
+%   interrupt library subsystems to drive Function-Call Subsystems.
+%
+%   Syntax:
+%       addFunctionCallBridge(chartPath)
+%
+%   Inputs:
+%       chartPath - Full path for the Chart block (1x1 string)
+%
+%   Outputs:
+%       none
+%
+%   Example:
+%       addFunctionCallBridge(dest + "/Bridge");
+%
+%   Other m-files required: none
+%   Subfunctions: none
+%   MAT-files required: none
+%
+%   See also: CREATEARDUINOPIOLIBRARY
+
+%   Author: Frey, Jed
+%   28-Sep-2026; Last revision: 28-Sep-2026
+
+%------------- BEGIN CODE --------------
 
     arguments
         chartPath (1,1) string

@@ -1,5 +1,33 @@
 function setSampleTime(block, parameterIndex)
-%setSampleTime Apply inherited (-1) or discrete sample time from a dialog parameter.
+%SETSAMPLETIME - Apply inherited (-1) or discrete sample time from a dialog.
+%   Reads block.DialogPrm(parameterIndex).Data. Empty or -1 sets inherited
+%   SampleTimes [-1, 0]. Positive finite scalars set [sampleTime, 0]. Missing
+%   dialog data falls back to inherited. Invalid values error
+%   arduinopio:InvalidSampleTime. Package path: arduinopio.sfcn.setSampleTime.
+%
+%   Syntax:
+%       arduinopio.sfcn.setSampleTime(block, parameterIndex)
+%
+%   Inputs:
+%       block - Level-2 MATLAB S-function block object with DialogPrm/SampleTimes.
+%       parameterIndex - (1,1) positive integer. Dialog parameter index.
+%
+%   Outputs:
+%       none
+%
+%   Example:
+%       % From setup: arduinopio.sfcn.setSampleTime(block, 2);
+%
+%   Other m-files required: none
+%   Subfunctions: none
+%   MAT-files required: none
+%
+%   See also: WRITERTWSCALAR, APPLYCOMMONIOOPTIONS
+
+%   Author: Frey, Jed
+%   28-Sep-2026; Last revision: 28-Sep-2026
+
+%------------- BEGIN CODE --------------
     arguments
         block
         parameterIndex (1,1) double {mustBeInteger, mustBePositive}

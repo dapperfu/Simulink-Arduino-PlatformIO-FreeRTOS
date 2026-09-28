@@ -1,5 +1,49 @@
 function filePath = emitPlatformioIni(filePath, options)
-%emitPlatformioIni Write a PlatformIO project file for generated ERT code.
+%EMITPLATFORMIOINI - Write a PlatformIO project file for generated ERT code.
+%   Creates platformio.ini for the piofrtos Arduino FreeRTOS Simulink target.
+%   Resolves Board through resolveKnownTarget when known, filling Platform and
+%   Framework if those options are blank. Sanitizes the env name, writes
+%   src_dir/include_dir, monitor_speed, a build_src_filter that excludes
+%   stock ERT mains, build_flags from IncludeFlags plus -DMODEL=ModelName and
+%   optional Defines, and lib_deps from ExtraLibraries via normalizeLibraries.
+%   Overwrites filePath with writelines.
+%
+%   Syntax:
+%       filePath = piofrtos.emitPlatformioIni(filePath, ModelName=name)
+%       filePath = piofrtos.emitPlatformioIni(filePath, ModelName=name, ...
+%           Platform="atmelavr", Board="uno", Framework="arduino")
+%       filePath = piofrtos.emitPlatformioIni(filePath, ModelName=name, ...
+%           ExtraLibraries=libs, MonitorSpeed="115200", IncludeFlags=flags, ...
+%           Defines=defs)
+%
+%   Inputs:
+%       filePath - (1,1) string destination path for platformio.ini.
+%       options.ModelName - (1,1) string required model name for comments and -DMODEL.
+%       options.Platform - (1,1) string. Default: "atmelavr".
+%       options.Board - (1,1) string. Default: "uno". May be a known DisplayName.
+%       options.Framework - (1,1) string. Default: "arduino".
+%       options.ExtraLibraries - (1,1) string lib_deps text. Default: "".
+%       options.MonitorSpeed - (1,1) string baud. Default: "115200".
+%       options.IncludeFlags - (1,:) string -I flags. Default: "-I.".
+%       options.Defines - (1,:) string extra -D flags. Default: empty (1x0).
+%
+%   Outputs:
+%       filePath - same path passed in after the file is written.
+%
+%   Example:
+%       % Emit a Uno project ini next to generated sources.
+%       piofrtos.emitPlatformioIni("platformio.ini", ModelName="blink");
+%
+%   Other m-files required: resolveKnownTarget, normalizeLibraries
+%   Subfunctions: sanitizeEnvName
+%   MAT-files required: none
+%
+%   See also: WRITEGENERATEDFILES, EMITFREERTOSMAIN, RESOLVEKNOWNTARGET
+
+%   Author: Frey, Jed
+%   28-Sep-2026; Last revision: 28-Sep-2026
+
+%------------- BEGIN CODE --------------
     arguments
         filePath (1,1) string
         options.ModelName (1,1) string
@@ -76,6 +120,23 @@ function filePath = emitPlatformioIni(filePath, options)
 end
 
 function envName = sanitizeEnvName(board)
+%SANITIZEENVNAME - Turn a board id into a safe PlatformIO [env:...] name.
+%   Local helper for emitPlatformioIni. Replaces non-alphanumeric/underscore
+%   characters with "_". Empty results become "board".
+%
+%   Syntax:
+%       envName = sanitizeEnvName(board)
+%
+%   Inputs:
+%       board - string PlatformIO board id after known-target resolution.
+%
+%   Outputs:
+%       envName - string suitable for use after "[env:".
+%
+%   Example:
+%       envName = sanitizeEnvName("nanoatmega328");
+%
+%   See also: EMITPLATFORMIOINI
     envName = regexprep(char(board), "[^A-Za-z0-9_]", "_");
     if isempty(envName)
         envName = "board";

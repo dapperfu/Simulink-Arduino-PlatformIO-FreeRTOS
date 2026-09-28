@@ -1,5 +1,47 @@
 function filePath = emitFreeRtosMain(filePath, modelName, rates, options)
-%emitFreeRtosMain Write an Arduino FreeRTOS main with one task per sample rate.
+%EMITFREERTOSMAIN - Write an Arduino FreeRTOS main with one task per sample rate.
+%   Emits main.cpp for the piofrtos PlatformIO FreeRTOS Simulink target. Each
+%   rates entry becomes a static task that calls StepFunction then
+%   vTaskDelayUntil. setup() runs Serial.begin, InitFunction, and xTaskCreate
+%   with priority from rates.Priority and stack PIOFRTOS_TASK_STACK (from
+%   StackWords). Errors with piofrtos:NoRatesForMain when rates is empty.
+%   Includes Arduino_FreeRTOS.h, ESP32 freertos headers, or FreeRTOS.h/task.h.
+%
+%   Syntax:
+%       filePath = piofrtos.emitFreeRtosMain(filePath, modelName, rates)
+%       filePath = piofrtos.emitFreeRtosMain(filePath, modelName, rates, ...
+%           HeaderFile=h, InitFunction=init, StackWords="2048", ...
+%           MonitorSpeed="115200")
+%
+%   Inputs:
+%       filePath - (1,1) string destination path (typically main.cpp).
+%       modelName - (1,1) string model name used in comments and header fallback.
+%       rates - struct array with PeriodSeconds, StepFunction, Priority, TaskName
+%           (and related fields from getModelSampleRates). Must be non-empty.
+%       options.HeaderFile - (1,1) string. Default: modelName + ".h".
+%       options.InitFunction - (1,1) string. Default: modelName + "_initialize".
+%       options.StackWords - (1,1) string stack depth words. Default: "2048".
+%           Rounded with max(1, round(double(...))).
+%       options.MonitorSpeed - (1,1) string baud for Serial.begin. Default: "115200".
+%
+%   Outputs:
+%       filePath - same path after writelines completes.
+%
+%   Example:
+%       % Write FreeRTOS main using rates from getModelSampleRates.
+%       rates = piofrtos.getModelSampleRates("blink");
+%       piofrtos.emitFreeRtosMain("main.cpp", "blink", rates);
+%
+%   Other m-files required: none
+%   Subfunctions: periodToTicksExpr, modelHeaderFile, quoteCString
+%   MAT-files required: none
+%
+%   See also: GETMODELSAMPLERATES, WRITEGENERATEDFILES, EMITPLATFORMIOINI
+
+%   Author: Frey, Jed
+%   28-Sep-2026; Last revision: 28-Sep-2026
+
+%------------- BEGIN CODE --------------
     arguments
         filePath (1,1) string
         modelName (1,1) string
@@ -126,6 +168,26 @@ function filePath = emitFreeRtosMain(filePath, modelName, rates, options)
 end
 
 function [ticksExpr, minTickHz] = periodToTicksExpr(periodSeconds)
+%PERIODTOTICKSEXPR - Convert a sample period to a FreeRTOS tick expression.
+%   Local helper for emitFreeRtosMain. Whole-millisecond periods use
+%   pdMS_TO_TICKS(N) with empty minTickHz. Otherwise emits a float multiply by
+%   configTICK_RATE_HZ and sets minTickHz to ceil(1/periodSeconds) for #error
+%   guards when the tick rate is too low.
+%
+%   Syntax:
+%       [ticksExpr, minTickHz] = periodToTicksExpr(periodSeconds)
+%
+%   Inputs:
+%       periodSeconds - numeric sample period in seconds (from rates.PeriodSeconds).
+%
+%   Outputs:
+%       ticksExpr - string C expression assigning TickType_t periodTicks.
+%       minTickHz - empty when using pdMS_TO_TICKS; otherwise required tick Hz.
+%
+%   Example:
+%       [ticksExpr, minTickHz] = periodToTicksExpr(0.01);
+%
+%   See also: EMITFREERTOSMAIN
     milliseconds = periodSeconds * 1000;
     roundedMilliseconds = round(milliseconds);
     if abs(milliseconds - roundedMilliseconds) < 1e-8 && roundedMilliseconds >= 1
@@ -140,6 +202,25 @@ function [ticksExpr, minTickHz] = periodToTicksExpr(periodSeconds)
 end
 
 function headerFile = modelHeaderFile(modelName, headerFile)
+%MODELHEADERFILE - Normalize the generated model header base name for #include.
+%   Local helper for emitFreeRtosMain. Empty headerFile becomes modelName.h.
+%   Strips directories so only base + extension are included; missing extension
+%   defaults to ".h".
+%
+%   Syntax:
+%       headerFile = modelHeaderFile(modelName, headerFile)
+%
+%   Inputs:
+%       modelName - string model name used when the header is empty or baseless.
+%       headerFile - string path or file name from code descriptor or default.
+%
+%   Outputs:
+%       headerFile - string "basename.ext" suitable for quoteCString.
+%
+%   Example:
+%       headerFile = modelHeaderFile("blink", "blink.h");
+%
+%   See also: EMITFREERTOSMAIN, QUOTECSTRING
     headerFile = strip(string(headerFile));
     if strlength(headerFile) == 0
         headerFile = modelName + ".h";
@@ -156,5 +237,21 @@ function headerFile = modelHeaderFile(modelName, headerFile)
 end
 
 function quoted = quoteCString(value)
+%QUOTECSTRING - Wrap a string in C double quotes for generated source.
+%   Local helper for emitFreeRtosMain (includes and xTaskCreate task names).
+%
+%   Syntax:
+%       quoted = quoteCString(value)
+%
+%   Inputs:
+%       value - string or convertible value placed between double quotes.
+%
+%   Outputs:
+%       quoted - string like """name""".
+%
+%   Example:
+%       quoted = quoteCString("blink.h");
+%
+%   See also: EMITFREERTOSMAIN, MODELHEADERFILE
     quoted = """" + string(value) + """";
 end

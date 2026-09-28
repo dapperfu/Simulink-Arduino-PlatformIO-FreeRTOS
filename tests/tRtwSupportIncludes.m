@@ -1,8 +1,50 @@
 classdef tRtwSupportIncludes < matlab.unittest.TestCase
-    % Tests for MATLAB ERT headers used by generated PlatformIO builds.
+    %TRTWSUPPORTINCLUDES - Locks ERT include-flag expansion and RTW support header copy.
+    %   Covers piofrtos.collectIncludeFlags and piofrtos.copyRtwSupportHeaders used by
+    %   PlatformIO builds. PathFixture adds the repo root. Failures mean make tokens are
+    %   not expanded, required Simulink includes are missing, or continuous/solver headers
+    %   are not copied into the build folder.
+    %
+    %   Syntax:
+    %       result = runtests("tRtwSupportIncludes")
+    %
+    %   Inputs:
+    %       none
+    %
+    %   Outputs:
+    %       none. Test methods pass, fail, or throw matlab.unittest results.
+    %
+    %   Example:
+    %       result = runtests("tRtwSupportIncludes");
+    %
+    %   Other m-files required: piofrtos.collectIncludeFlags, piofrtos.copyRtwSupportHeaders
+    %   Subfunctions: none
+    %   MAT-files required: none
+    %
+    %   See also: TGENERATETARGETFILES, PIOFRTOS.COLLECTINCLUDEFLAGS
+
+    %   Author: Frey, Jed
+    %   28-Sep-2026; Last revision: 28-Sep-2026
 
     methods (TestClassSetup)
         function addRepoToPath(testCase)
+        %ADDREPOTOPATH - Adds the repository root to the MATLAB path for the class.
+        %   Resolves the repo root from this test file location and applies PathFixture so
+        %   piofrtos package functions resolve during the suite.
+        %
+        %   Syntax:
+        %       addRepoToPath(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tRtwSupportIncludes", "ProcedureName", "addRepoToPath");
+        %
+        %   See also: TRTWSUPPORTINCLUDES
             testsFolder = fileparts(mfilename("fullpath"));
             repoRoot = fileparts(testsFolder);
             testCase.applyFixture(matlab.unittest.fixtures.PathFixture(repoRoot));
@@ -11,6 +53,25 @@ classdef tRtwSupportIncludes < matlab.unittest.TestCase
 
     methods (Test)
         function expandsMakeTokensAndAddsSimulinkInclude(testCase)
+        %EXPANDSMAKETOKENSANDADDSSIMULINKINCLUDE - Expands make tokens into -I flags.
+        %   Passes $(MATLAB_ROOT), $(START_DIR), and unknown tokens with MatlabRoot and
+        %   StartDir name-values. Expects -I., quoted expanded paths, extern/include, and
+        %   that unresolved tokens are dropped from the joined flag text.
+        %
+        %   Syntax:
+        %       expandsMakeTokensAndAddsSimulinkInclude(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tRtwSupportIncludes", ...
+        %           "ProcedureName", "expandsMakeTokensAndAddsSimulinkInclude");
+        %
+        %   See also: TRTWSUPPORTINCLUDES, PIOFRTOS.COLLECTINCLUDEFLAGS
             includeFlags = piofrtos.collectIncludeFlags([
                 "$(MATLAB_ROOT)/simulink/include"
                 "$(START_DIR)/shared"
@@ -28,6 +89,25 @@ classdef tRtwSupportIncludes < matlab.unittest.TestCase
         end
 
         function copiesContinuousAndSolverHeaders(testCase)
+        %COPIESCONTINUOUSANDSOLVERHEADERS - Copies rtw_continuous.h and rtw_solver.h.
+        %   Uses TemporaryFolderFixture and piofrtos.copyRtwSupportHeaders. Asserts both
+        %   files exist, appear in the returned list, and contain expected include text
+        %   (rtwtypes.h and rtw_continuous.h respectively).
+        %
+        %   Syntax:
+        %       copiesContinuousAndSolverHeaders(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tRtwSupportIncludes", ...
+        %           "ProcedureName", "copiesContinuousAndSolverHeaders");
+        %
+        %   See also: TRTWSUPPORTINCLUDES, PIOFRTOS.COPYRTWSUPPORTHEADERS
             fixture = testCase.applyFixture(matlab.unittest.fixtures.TemporaryFolderFixture);
             copiedFiles = piofrtos.copyRtwSupportHeaders(fixture.Folder);
 

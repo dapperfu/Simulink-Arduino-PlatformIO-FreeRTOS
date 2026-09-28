@@ -1,8 +1,51 @@
 classdef tDigitalIoMethods < matlab.unittest.TestCase
-    % Compare Digital IO simulation across System objects and Level-2 C S-functions.
+    %TDIGITALIOMETHODS - Compares Digital IO across System objects and Level-2 C S-fcns.
+    %   Host-simulates Digital Input/Output MATLAB System objects and Level-2 C mex
+    %   blocks, and checks library folders for three Digital IO method variants. Fixtures
+    %   add matlab, sfcn, and libraries paths. Failure means SimValue or simulation path
+    %   regressions, or library layout drift.
+    %
+    %   Syntax:
+    %       result = runtests("tDigitalIoMethods")
+    %
+    %   Inputs:
+    %       none
+    %
+    %   Outputs:
+    %       none. Test methods pass, fail, or throw matlab.unittest results.
+    %
+    %   Example:
+    %       result = runtests("tDigitalIoMethods");
+    %
+    %   Other m-files required: arduinopio.blocks.common.DigitalInput,
+    %       arduinopio.blocks.common.DigitalOutput, createArduinoPioLibrary
+    %   Subfunctions: uniqueModelName
+    %   MAT-files required: none
+    %
+    %   See also: TDIGITALSYSTEMOBJECTS, TCOMMONIOSFUNCTIONS
+
+    %   Author: Frey, Jed
+    %   28-Sep-2026; Last revision: 28-Sep-2026
 
     methods (TestClassSetup)
         function addRepoToPath(testCase)
+        %ADDREPOTOPATH - Adds repo, matlab, sfcn, and libraries paths for the class.
+        %   Applies PathFixture so Digital IO System objects, S-functions, and the
+        %   library model resolve during simulation and library checks.
+        %
+        %   Syntax:
+        %       addRepoToPath(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tDigitalIoMethods", "ProcedureName", "addRepoToPath");
+        %
+        %   See also: TDIGITALIOMETHODS
             testsFolder = fileparts(mfilename("fullpath"));
             repoRoot = fileparts(testsFolder);
             testCase.applyFixture(matlab.unittest.fixtures.PathFixture(repoRoot));
@@ -14,6 +57,24 @@ classdef tDigitalIoMethods < matlab.unittest.TestCase
 
     methods (Test)
         function systemObjectDigitalInputUsesSimValue(testCase)
+        %SYSTEMOBJECTDIGITALINPUTUSESSIMVALUE - DigitalInput System object uses SimValue.
+        %   Builds a fixed-step model with MATLAB System DigitalInput (Pin 2, SimValue 1)
+        %   logged to workspace and verifies the last logged sample is true.
+        %
+        %   Syntax:
+        %       systemObjectDigitalInputUsesSimValue(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tDigitalIoMethods", ...
+        %           "ProcedureName", "systemObjectDigitalInputUsesSimValue");
+        %
+        %   See also: TDIGITALIOMETHODS, ARDUINOPIO.BLOCKS.COMMON.DIGITALINPUT
             modelName = uniqueModelName("sysDi");
             new_system(modelName);
             load_system(modelName);
@@ -38,6 +99,24 @@ classdef tDigitalIoMethods < matlab.unittest.TestCase
         end
 
         function systemObjectDigitalOutputSimulates(testCase)
+        %SYSTEMOBJECTDIGITALOUTPUTSIMULATES - DigitalOutput System object simulates.
+        %   Builds a fixed-step model driving DigitalOutput (Pin 13) from a Constant 1 and
+        %   verifies sim completes without error under interpreted execution.
+        %
+        %   Syntax:
+        %       systemObjectDigitalOutputSimulates(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tDigitalIoMethods", ...
+        %           "ProcedureName", "systemObjectDigitalOutputSimulates");
+        %
+        %   See also: TDIGITALIOMETHODS, ARDUINOPIO.BLOCKS.COMMON.DIGITALOUTPUT
             modelName = uniqueModelName("sysDo");
             new_system(modelName);
             load_system(modelName);
@@ -59,6 +138,25 @@ classdef tDigitalIoMethods < matlab.unittest.TestCase
         end
 
         function level2CDigitalInputUsesSimValue(testCase)
+        %LEVEL2CDIGITALINPUTUSESSIMVALUE - Level-2 C digital input uses SimValue 1.
+        %   Assumes arduinopio_digital_input_c mex exists. Parameters "2, 0, 0.01, 1"
+        %   configure pin, pull, sample time, and SimValue; verifies last logged output
+        %   is true. Assumes fail when mex is missing.
+        %
+        %   Syntax:
+        %       level2CDigitalInputUsesSimValue(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tDigitalIoMethods", ...
+        %           "ProcedureName", "level2CDigitalInputUsesSimValue");
+        %
+        %   See also: TDIGITALIOMETHODS
             testCase.assumeTrue(exist("arduinopio_digital_input_c", "file") == 3, ...
                 "Level-2 C mex is not built. Run buildArduinoPioSFunctions.");
 
@@ -82,6 +180,24 @@ classdef tDigitalIoMethods < matlab.unittest.TestCase
         end
 
         function level2CDigitalOutputSimulates(testCase)
+        %LEVEL2CDIGITALOUTPUTSIMULATES - Level-2 C digital output simulates Constant 1.
+        %   Assumes arduinopio_digital_output_c mex exists. Parameters "13, 0.01" set pin
+        %   and sample time; verifies sim completes. Assumes fail when mex is missing.
+        %
+        %   Syntax:
+        %       level2CDigitalOutputSimulates(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tDigitalIoMethods", ...
+        %           "ProcedureName", "level2CDigitalOutputSimulates");
+        %
+        %   See also: TDIGITALIOMETHODS
             testCase.assumeTrue(exist("arduinopio_digital_output_c", "file") == 3, ...
                 "Level-2 C mex is not built. Run buildArduinoPioSFunctions.");
 
@@ -103,6 +219,25 @@ classdef tDigitalIoMethods < matlab.unittest.TestCase
         end
 
         function libraryListsThreeDigitalIoMethods(testCase)
+        %LIBRARYLISTSTHREEDIGITALIOMETHODS - Library exposes three Digital IO method trees.
+        %   Assumes arduinopio_lib.slx exists. Verifies Level-2 MATLAB, System object, and
+        %   Level-2 C folders exist and that Digital Input blocks bind to
+        %   arduinopio_digital_input, DigitalInput System, and arduinopio_digital_input_c.
+        %
+        %   Syntax:
+        %       libraryListsThreeDigitalIoMethods(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tDigitalIoMethods", ...
+        %           "ProcedureName", "libraryListsThreeDigitalIoMethods");
+        %
+        %   See also: TDIGITALIOMETHODS, CREATEARDUINOPIOLIBRARY
             libPath = fullfile(arduinopio.getRootFolder(), "libraries", "arduinopio_lib.slx");
             testCase.assumeTrue(isfile(libPath), "Library not built. Run createArduinoPioLibrary.");
 
@@ -135,5 +270,22 @@ classdef tDigitalIoMethods < matlab.unittest.TestCase
 end
 
 function name = uniqueModelName(prefix)
+%UNIQUEMODELNAME - Builds a random model name from a short prefix.
+%   Concatenates prefix with a random integer in 1e6 so temporary models do not collide
+%   across concurrent or repeated test runs.
+%
+%   Syntax:
+%       name = uniqueModelName(prefix)
+%
+%   Inputs:
+%       prefix - char or string prefix for the temporary model name.
+%
+%   Outputs:
+%       name - string scalar unique model name.
+%
+%   Example:
+%       name = uniqueModelName("sysDi");
+%
+%   See also: TDIGITALIOMETHODS
     name = string(prefix) + string(randi(1e6));
 end

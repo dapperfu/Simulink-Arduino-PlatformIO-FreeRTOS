@@ -1,8 +1,51 @@
 classdef tCanBlocks < matlab.unittest.TestCase
-    % Host simulation tests for MCP2515 CAN Transmit and Receive System objects.
+    %TCANBLOCKS - Host simulation tests for MCP2515 CAN Transmit and Receive blocks.
+    %   Covers CanReceive idle outputs, CanTransmit uint8 payload simulation,
+    %   knownLibDeps MCP2515 entry, and validateCanIdentifier range checks. Fixtures add
+    %   matlab path. Failure means host idle behavior, lib deps, or ID validation drifted.
+    %
+    %   Syntax:
+    %       result = runtests("tCanBlocks")
+    %
+    %   Inputs:
+    %       none
+    %
+    %   Outputs:
+    %       none. Test methods pass, fail, or throw matlab.unittest results.
+    %
+    %   Example:
+    %       result = runtests("tCanBlocks");
+    %
+    %   Other m-files required: arduinopio.blocks.common.CanReceive,
+    %       arduinopio.blocks.common.CanTransmit, arduinopio.knownLibDeps,
+    %       arduinopio.validateCanIdentifier
+    %   Subfunctions: uniqueModelName
+    %   MAT-files required: none
+    %
+    %   See also: TCOMMONIOSFUNCTIONS, ARDUINOPIO.VALIDATECANIDENTIFIER
+
+    %   Author: Frey, Jed
+    %   28-Sep-2026; Last revision: 28-Sep-2026
 
     methods (TestClassSetup)
         function addRepoToPath(testCase)
+        %ADDREPOTOPATH - Adds the repository and matlab package paths for the class.
+        %   Applies PathFixture so CAN System objects and validation helpers resolve
+        %   during host simulation.
+        %
+        %   Syntax:
+        %       addRepoToPath(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tCanBlocks", "ProcedureName", "addRepoToPath");
+        %
+        %   See also: TCANBLOCKS
             testsFolder = fileparts(mfilename("fullpath"));
             repoRoot = fileparts(testsFolder);
             testCase.applyFixture(matlab.unittest.fixtures.PathFixture(repoRoot));
@@ -12,6 +55,23 @@ classdef tCanBlocks < matlab.unittest.TestCase
 
     methods (Test)
         function receiveIsIdleOnHost(testCase)
+        %RECEIVEISIDLEONHOST - CanReceive stays idle with zero id/data/len on host.
+        %   Simulates CanReceive under interpreted execution and verifies last samples:
+        %   canId 0, eight uint8 zeros, length 0, and status false.
+        %
+        %   Syntax:
+        %       receiveIsIdleOnHost(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tCanBlocks", "ProcedureName", "receiveIsIdleOnHost");
+        %
+        %   See also: TCANBLOCKS, ARDUINOPIO.BLOCKS.COMMON.CANRECEIVE
             modelName = uniqueModelName("canRx");
             new_system(modelName);
             load_system(modelName);
@@ -46,6 +106,23 @@ classdef tCanBlocks < matlab.unittest.TestCase
         end
 
         function transmitAcceptsUint8Payload(testCase)
+        %TRANSMITACCEPTSUINT8PAYLOAD - CanTransmit accepts an 8-byte uint8 payload.
+        %   Drives CanTransmit from Constant uint8(1:8) under interpreted execution and
+        %   verifies sim completes without error.
+        %
+        %   Syntax:
+        %       transmitAcceptsUint8Payload(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tCanBlocks", "ProcedureName", "transmitAcceptsUint8Payload");
+        %
+        %   See also: TCANBLOCKS, ARDUINOPIO.BLOCKS.COMMON.CANTRANSMIT
             modelName = uniqueModelName("canTx");
             new_system(modelName);
             load_system(modelName);
@@ -65,6 +142,23 @@ classdef tCanBlocks < matlab.unittest.TestCase
         end
 
         function knownLibDepsIncludesMcp2515(testCase)
+        %KNOWNLIBDEPSINCLUDESMCP2515 - knownLibDeps lists MCP2515 define and library.
+        %   Asserts ARDUINOPIO_NEED_MCP2515 appears among Define fields and
+        %   autowp/autowp-mcp2515 among LibDep fields.
+        %
+        %   Syntax:
+        %       knownLibDepsIncludesMcp2515(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tCanBlocks", "ProcedureName", "knownLibDepsIncludesMcp2515");
+        %
+        %   See also: TCANBLOCKS, ARDUINOPIO.KNOWNLIBDEPS
             deps = arduinopio.knownLibDeps();
             defines = string({deps.Define});
             libraries = string({deps.LibDep});
@@ -73,6 +167,23 @@ classdef tCanBlocks < matlab.unittest.TestCase
         end
 
         function rejectsOversizedStandardId(testCase)
+        %REJECTSOVERSIZEDSTANDARDID - Standard CAN id 2048 errors with arduinopio:CanId.
+        %   Calls validateCanIdentifier(2048, false, "MessageId") and expects error
+        %   identifier arduinopio:CanId.
+        %
+        %   Syntax:
+        %       rejectsOversizedStandardId(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tCanBlocks", "ProcedureName", "rejectsOversizedStandardId");
+        %
+        %   See also: TCANBLOCKS, ARDUINOPIO.VALIDATECANIDENTIFIER
             testCase.verifyError(@() arduinopio.validateCanIdentifier(2048, false, "MessageId"), ...
                 "arduinopio:CanId");
         end
@@ -80,5 +191,22 @@ classdef tCanBlocks < matlab.unittest.TestCase
 end
 
 function name = uniqueModelName(prefix)
+%UNIQUEMODELNAME - Builds a random model name from a short prefix.
+%   Concatenates prefix with a random integer in 1e6 so temporary models do not collide
+%   across concurrent or repeated test runs.
+%
+%   Syntax:
+%       name = uniqueModelName(prefix)
+%
+%   Inputs:
+%       prefix - char or string prefix for the temporary model name.
+%
+%   Outputs:
+%       name - string scalar unique model name.
+%
+%   Example:
+%       name = uniqueModelName("canRx");
+%
+%   See also: TCANBLOCKS
     name = string(prefix) + string(randi(1e6));
 end

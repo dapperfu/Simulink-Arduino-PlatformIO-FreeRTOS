@@ -1,6 +1,42 @@
 function info = uno()
-%uno Capability and pin map for Arduino Uno R3 (ATmega328P).
+%UNO - Capability and pin map for Arduino Uno R3 (ATmega328P).
+%   Returns the reference board struct used by other maps and by getBoard when
+%   the default board is selected. Implemented AVR map with MCP2515 CAN support.
+%   Package path: arduinopio.boards.uno.
+%
+%   Syntax:
+%       info = arduinopio.boards.uno()
+%
+%   Inputs:
+%       none
+%
+%   Outputs:
+%       info - struct with fields:
+%           Name - "uno"; DisplayName - "Arduino Uno R3"; Mcu - "ATmega328P";
+%           Architecture - "avr"; Implemented - true;
+%           DigitalPins - 0:19; AnalogPins - 0:5; AnalogAsDigitalPins - 14:19;
+%           PwmPins - [3, 5, 6, 9, 10, 11]; InterruptPins - [2, 3];
+%           CapturePins - 8; SpiPins - Ss/Mosi/Miso/Sck 10/11/12/13;
+%           I2cPins - Sda/Scl 18/19; UartCount - 1; UartPins - Rx/Tx 0/1;
+%           EepromSize - 1024; AdcBits - 10;
+%           HasInputPulldown/HasDac/HasBle/HasWifi/HasOnboardCan/HasLedMatrix -
+%           false; HasMcp2515 - true; BuiltinLedPin - 13;
+%           PwmTimers - Pin/Timer/Channel for pins 3,5,6,9,10,11 (timers 2,0,0,
+%           1,1,2); ExtraBlocks - empty string; Notes - WDT/timer/CAN notes.
+%
+%   Example:
+%       info = arduinopio.boards.uno();
+%
+%   Other m-files required: none
+%   Subfunctions: none
+%   MAT-files required: none
+%
+%   See also: GETBOARD, NANO, TIMERFORPWMPIN, LISTBOARDS
 
+%   Author: Frey, Jed
+%   28-Sep-2026; Last revision: 28-Sep-2026
+
+%------------- BEGIN CODE --------------
     info = struct();
     info.Name = "uno";
     info.DisplayName = "Arduino Uno R3";

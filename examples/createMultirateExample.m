@@ -1,5 +1,36 @@
 function modelName = createMultirateExample(options)
-%createMultirateExample Create a two-rate model configured for piofrtos.tlc.
+%CREATEMULTIRATEEXAMPLE - Create a two-rate model configured for piofrtos.tlc.
+%   Adds the repo root and piofrtos folder to the path, regenerates target files,
+%   then builds a model named options.ModelName (default piofrtos_multirate) with
+%   a 0.01 s fixed step and infinite stop time. A fast chain (0.01 s pulse and
+%   gain) and a slow chain (0.1 s pulse and unit delay) each drive an Outport.
+%   Saves under examples/ and opens or closes per options.OpenModel.
+%
+%   Syntax:
+%       modelName = createMultirateExample()
+%       modelName = createMultirateExample(ModelName=name, OpenModel=flag)
+%
+%   Inputs:
+%       options.ModelName - Model name string (default "piofrtos_multirate")
+%       options.OpenModel - If true, leave the model open (default true)
+%
+%   Outputs:
+%       modelName - Name of the created model (string)
+%
+%   Example:
+%       modelName = createMultirateExample(OpenModel=false);
+%
+%   Other m-files required: piofrtos.generateTargetFiles, piofrtos.configureModel
+%   Subfunctions: none
+%   MAT-files required: none
+%
+%   See also: CREATEARDUINOPIOEXAMPLES, SETUP_PIOFRTOS, BUILD_ALL
+
+%   Author: Frey, Jed
+%   28-Sep-2026; Last revision: 28-Sep-2026
+
+%------------- BEGIN CODE --------------
+
     arguments
         options.ModelName (1,1) string = "piofrtos_multirate"
         options.OpenModel (1,1) logical = true

@@ -1,5 +1,33 @@
 function installArduinoPio()
-%installArduinoPio Put the toolbox on the path, build S-functions if possible, and create the library.
+%INSTALLARDUINOPIO - Install path, mex S-functions, library, and examples.
+%   Calls setupArduinoPioPath, attempts buildArduinoPioSFunctions (warns and
+%   continues if mex fails), then createArduinoPioLibrary and
+%   createArduinoPioExamples. Re-runs setupArduinoPioPath and
+%   sl_refresh_customizations so the Library Browser picks up arduinopio_lib.
+%
+%   Syntax:
+%       installArduinoPio()
+%
+%   Inputs:
+%       none
+%
+%   Outputs:
+%       none
+%
+%   Example:
+%       installArduinoPio();
+%
+%   Other m-files required: setupArduinoPioPath, buildArduinoPioSFunctions,
+%       createArduinoPioLibrary, createArduinoPioExamples
+%   Subfunctions: none
+%   MAT-files required: none
+%
+%   See also: SETUPARDUINOPIOPATH, CREATEARDUINOPIOLIBRARY, BUILD_ALL
+
+%   Author: Frey, Jed
+%   28-Sep-2026; Last revision: 28-Sep-2026
+
+%------------- BEGIN CODE --------------
 
     setupArduinoPioPath();
     try

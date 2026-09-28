@@ -1,8 +1,51 @@
 classdef tCommonIoSFunctions < matlab.unittest.TestCase
-    % Simulation tests for common Digital, Analog, and Serial Level-2 S-functions.
+    %TCOMMONIOSFUNCTIONS - Simulation tests for Digital, Analog, and Serial S-functions.
+    %   Host-simulates Level-2 MATLAB S-functions for digital/analog IO and serial
+    %   receive/transmit. Fixtures add matlab and sfcn paths. Local helpers build short
+    %   models. Failure means simulation values or idle serial behavior drifted.
+    %
+    %   Syntax:
+    %       result = runtests("tCommonIoSFunctions")
+    %
+    %   Inputs:
+    %       none
+    %
+    %   Outputs:
+    %       none. Test methods pass, fail, or throw matlab.unittest results.
+    %
+    %   Example:
+    %       result = runtests("tCommonIoSFunctions");
+    %
+    %   Other m-files required: arduinopio_digital_input, arduinopio_analog_input,
+    %       arduinopio_digital_output, arduinopio_analog_output,
+    %       arduinopio_serial_receive, arduinopio_serial_transmit
+    %   Subfunctions: simulateSourceBlock, simulateSerialReceive, uniqueModelName
+    %   MAT-files required: none
+    %
+    %   See also: TPINPULL, TDIGITALIOMETHODS
+
+    %   Author: Frey, Jed
+    %   28-Sep-2026; Last revision: 28-Sep-2026
 
     methods (TestClassSetup)
         function addRepoToPath(testCase)
+        %ADDREPOTOPATH - Adds repo, matlab, and sfcn paths for the class.
+        %   Applies PathFixture so common IO Level-2 MATLAB S-functions resolve during
+        %   host simulation.
+        %
+        %   Syntax:
+        %       addRepoToPath(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tCommonIoSFunctions", "ProcedureName", "addRepoToPath");
+        %
+        %   See also: TCOMMONIOSFUNCTIONS
             testsFolder = fileparts(mfilename("fullpath"));
             repoRoot = fileparts(testsFolder);
             testCase.applyFixture(matlab.unittest.fixtures.PathFixture(repoRoot));
@@ -13,22 +56,94 @@ classdef tCommonIoSFunctions < matlab.unittest.TestCase
 
     methods (Test)
         function digitalInputUsesSimulationValue(testCase)
+        %DIGITALINPUTUSESSIMULATIONVALUE - Digital input outputs SimValue 1.
+        %   Simulates arduinopio_digital_input with parameters "2, 0, 0.01, 1" and
+        %   verifies the last logged sample is true.
+        %
+        %   Syntax:
+        %       digitalInputUsesSimulationValue(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tCommonIoSFunctions", ...
+        %           "ProcedureName", "digitalInputUsesSimulationValue");
+        %
+        %   See also: TCOMMONIOSFUNCTIONS, SIMULATESOURCEBLOCK
             output = simulateSourceBlock(testCase, "arduinopio_digital_input", "2, 0, 0.01, 1");
             testCase.verifyTrue(logical(output));
         end
 
         function analogInputUsesSimulationCounts(testCase)
+        %ANALOGINPUTUSESSIMULATIONCOUNTS - Analog input outputs SimValue counts 512.
+        %   Simulates arduinopio_analog_input with parameters "0, 0.01, 512" and verifies
+        %   the last sample equals uint16(512).
+        %
+        %   Syntax:
+        %       analogInputUsesSimulationCounts(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tCommonIoSFunctions", ...
+        %           "ProcedureName", "analogInputUsesSimulationCounts");
+        %
+        %   See also: TCOMMONIOSFUNCTIONS, SIMULATESOURCEBLOCK
             output = simulateSourceBlock(testCase, "arduinopio_analog_input", "0, 0.01, 512");
             testCase.verifyEqual(output, uint16(512));
         end
 
         function serialReceiveReturnsIdleOnHost(testCase)
+        %SERIALRECEIVERETURNSIDLEONHOST - Serial receive is idle with zero data on host.
+        %   Simulates arduinopio_serial_receive and verifies two uint8 zeros and status
+        %   false on the last sample.
+        %
+        %   Syntax:
+        %       serialReceiveReturnsIdleOnHost(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tCommonIoSFunctions", ...
+        %           "ProcedureName", "serialReceiveReturnsIdleOnHost");
+        %
+        %   See also: TCOMMONIOSFUNCTIONS, SIMULATESERIALRECEIVE
             [data, status] = simulateSerialReceive(testCase);
             testCase.verifyEqual(data, zeros(2, 1, "uint8"));
             testCase.verifyFalse(logical(status));
         end
 
         function digitalAndAnalogOutputsSimulate(testCase)
+        %DIGITALANDANALOGOUTPUTSSIMULATE - Digital and analog outputs simulate together.
+        %   Builds a model driving arduinopio_digital_output (pin 13) and
+        %   arduinopio_analog_output (pin 5) from constants and verifies sim completes.
+        %
+        %   Syntax:
+        %       digitalAndAnalogOutputsSimulate(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tCommonIoSFunctions", ...
+        %           "ProcedureName", "digitalAndAnalogOutputsSimulate");
+        %
+        %   See also: TCOMMONIOSFUNCTIONS
             modelName = uniqueModelName("ioOut");
             new_system(modelName);
             load_system(modelName);
@@ -55,6 +170,24 @@ classdef tCommonIoSFunctions < matlab.unittest.TestCase
         end
 
         function serialTransmitAcceptsUint8(testCase)
+        %SERIALTRANSMITACCEPTSUINT8 - Serial transmit accepts a uint8 payload on host.
+        %   Drives arduinopio_serial_transmit (port 0, 9600) from Constant uint8(65) and
+        %   verifies sim completes.
+        %
+        %   Syntax:
+        %       serialTransmitAcceptsUint8(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tCommonIoSFunctions", ...
+        %           "ProcedureName", "serialTransmitAcceptsUint8");
+        %
+        %   See also: TCOMMONIOSFUNCTIONS
             modelName = uniqueModelName("ioTx");
             new_system(modelName);
             load_system(modelName);
@@ -76,6 +209,25 @@ classdef tCommonIoSFunctions < matlab.unittest.TestCase
 end
 
 function output = simulateSourceBlock(testCase, sfcnName, parameters)
+%SIMULATESOURCEBLOCK - Host-simulates a source S-function and returns the last sample.
+%   Builds a short fixed-step model with the named Level-2 MATLAB S-Function, logs
+%   output to the workspace, and returns the final logged row.
+%
+%   Syntax:
+%       output = simulateSourceBlock(testCase, sfcnName, parameters)
+%
+%   Inputs:
+%       testCase - matlab.unittest.TestCase instance for assertTrue on load.
+%       sfcnName - char or string FunctionName for the S-Function block.
+%       parameters - char or string S-Function Parameters vector string.
+%
+%   Outputs:
+%       output - last logged sample from the source block.
+%
+%   Example:
+%       output = simulateSourceBlock(testCase, "arduinopio_digital_input", "2, 0, 0.01, 1");
+%
+%   See also: TCOMMONIOSFUNCTIONS
     modelName = uniqueModelName("ioSrc");
     new_system(modelName);
     load_system(modelName);
@@ -95,6 +247,24 @@ function output = simulateSourceBlock(testCase, sfcnName, parameters)
 end
 
 function [data, status] = simulateSerialReceive(testCase)
+%SIMULATESERIALRECEIVE - Host-simulates serial receive and returns last data and status.
+%   Builds a short fixed-step model with arduinopio_serial_receive parameters
+%   "0, 9600, 2, 0.01" and logs both output ports.
+%
+%   Syntax:
+%       [data, status] = simulateSerialReceive(testCase)
+%
+%   Inputs:
+%       testCase - matlab.unittest.TestCase instance for assertTrue on load.
+%
+%   Outputs:
+%       data - last data column from the receive block.
+%       status - last status sample from the receive block.
+%
+%   Example:
+%       [data, status] = simulateSerialReceive(testCase);
+%
+%   See also: TCOMMONIOSFUNCTIONS
     modelName = uniqueModelName("ioRx");
     new_system(modelName);
     load_system(modelName);
@@ -119,5 +289,22 @@ function [data, status] = simulateSerialReceive(testCase)
 end
 
 function name = uniqueModelName(prefix)
+%UNIQUEMODELNAME - Builds a random model name from a short prefix.
+%   Concatenates prefix with a random integer in 1e6 so temporary models do not collide
+%   across concurrent or repeated test runs.
+%
+%   Syntax:
+%       name = uniqueModelName(prefix)
+%
+%   Inputs:
+%       prefix - char or string prefix for the temporary model name.
+%
+%   Outputs:
+%       name - string scalar unique model name.
+%
+%   Example:
+%       name = uniqueModelName("ioSrc");
+%
+%   See also: TCOMMONIOSFUNCTIONS
     name = string(prefix) + string(randi(1e6));
 end

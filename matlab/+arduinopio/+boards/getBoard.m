@@ -1,6 +1,39 @@
 function info = getBoard(boardId)
-%getBoard Return board capability data. Defaults to Uno R3.
+%GETBOARD - Return board capability data for a board id, defaulting to Uno R3.
+%   Resolves aliases to a board map function under arduinopio.boards. Empty
+%   boardId uses resolveActiveBoardId (PioBoard, then HardwareBoard, else "uno").
+%   Unknown ids warn arduinopio:UnknownBoard and return the Uno map. Package
+%   path: arduinopio.boards.getBoard.
+%
+%   Syntax:
+%       info = arduinopio.boards.getBoard(boardId)
+%       info = arduinopio.boards.getBoard()
+%
+%   Inputs:
+%       boardId - (1,1) string. Board key or alias. Default "" (active model or
+%           Uno). Aliases include uno, nano, mega2560, due, mkrWifi1010, esp32,
+%           uno r4, nano33ble, and common display-name forms.
+%
+%   Outputs:
+%       info - struct from the matching board function (e.g. Name, DisplayName,
+%           Mcu, Architecture, Implemented, DigitalPins, AnalogPins, PwmPins,
+%           UartCount, EepromSize, PwmTimers, feature flags). See UNO for the
+%           full field set of the default map.
+%
+%   Example:
+%       info = arduinopio.boards.getBoard("nano");
+%
+%   Other m-files required: arduinopio.boards.uno, nano, mega2560, due,
+%       mkrWifi1010, esp32Wroom, unoR4, nano33Ble
+%   Subfunctions: resolveActiveBoardId
+%   MAT-files required: none
+%
+%   See also: LISTBOARDS, UNO, NANO, MEGA2560
 
+%   Author: Frey, Jed
+%   28-Sep-2026; Last revision: 28-Sep-2026
+
+%------------- BEGIN CODE --------------
     arguments
         boardId (1,1) string = ""
     end
@@ -34,6 +67,23 @@ function info = getBoard(boardId)
 end
 
 function boardId = resolveActiveBoardId()
+%RESOLVEACTIVEBOARDID - Choose board id from the current model, else "uno".
+%   Prefers nonempty PioBoard on bdroot, then HardwareBoard when set and not
+%   "None". Returns "uno" if no model is loaded or parameters are unavailable.
+%
+%   Syntax:
+%       boardId = resolveActiveBoardId()
+%
+%   Inputs:
+%       none
+%
+%   Outputs:
+%       boardId - string. Resolved board identifier for getBoard.
+%
+%   Example:
+%       id = resolveActiveBoardId();
+%
+%   See also: GETBOARD
     boardId = "uno";
     try
         modelName = bdroot;

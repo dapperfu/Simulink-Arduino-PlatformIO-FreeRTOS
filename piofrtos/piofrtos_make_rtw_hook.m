@@ -1,5 +1,38 @@
 function piofrtos_make_rtw_hook(hookMethod, modelName, ~, ~, ~, ~, buildInfo)
-%piofrtos_make_rtw_hook Build-process hook for the PlatformIO FreeRTOS target.
+%PIOFRTOS_MAKE_RTW_HOOK - Build-process hook for the PlatformIO FreeRTOS target.
+%   Dispatches on hookMethod string. On entry, validates the model and locates
+%   PlatformIO unless GenCodeOnly is on. After TLC and before make, writes
+%   generated PlatformIO files via piofrtos.writeGeneratedFiles. Prints messages
+%   on error and exit. Unknown future hook stages are ignored. buildInfo may be
+%   empty when fewer than seven arguments are supplied.
+%
+%   Syntax:
+%       piofrtos_make_rtw_hook(hookMethod, modelName, rtwroot, templateMakefile, ...
+%           buildOpts, buildArgs, buildInfo)
+%
+%   Inputs:
+%       hookMethod - Stage name (entry, before_tlc, after_tlc, before_make, ...)
+%       modelName  - Model being built
+%       buildInfo  - Optional RTW build info (default [] if omitted)
+%
+%   Outputs:
+%       none
+%
+%   Example:
+%       % Invoked automatically by the piofrtos.tlc make process
+%
+%   Other m-files required: piofrtos.validateModelForTarget,
+%       piofrtos.locatePlatformio, piofrtos.writeGeneratedFiles
+%   Subfunctions: none
+%   MAT-files required: none
+%
+%   See also: SETUP_PIOFRTOS, BUILD_ALL
+
+%   Author: Frey, Jed
+%   28-Sep-2026; Last revision: 28-Sep-2026
+
+%------------- BEGIN CODE --------------
+
     if nargin < 7
         buildInfo = [];
     end

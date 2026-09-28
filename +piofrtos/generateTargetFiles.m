@@ -1,8 +1,39 @@
 function generatedFiles = generateTargetFiles(targetFolder)
-%generateTargetFiles Write the system target file and template makefile.
-%   generatedFiles = piofrtos.generateTargetFiles() writes piofrtos.tlc and
-%   piofrtos.tmf into the target folder. Option names, defaults, and make
-%   tokens come from piofrtos.getOptionTable so the two files stay aligned.
+%GENERATETARGETFILES - Write the system target file and template makefile.
+%   Regenerates piofrtos.tlc and piofrtos.tmf for the Arduino FreeRTOS
+%   (PlatformIO) Simulink target. Option names, defaults, tooltips, callbacks,
+%   and make tokens come from getOptionTable so TLC rtwoptions and TMF macros
+%   stay aligned. Creates targetFolder if needed. Default folder is
+%   getTargetFolder(). Overwrites both files via writelines; do not edit them
+%   by hand after generation.
+%
+%   Syntax:
+%       generatedFiles = piofrtos.generateTargetFiles()
+%       generatedFiles = piofrtos.generateTargetFiles(targetFolder)
+%
+%   Inputs:
+%       targetFolder - (1,1) string output directory. Default:
+%           piofrtos.getTargetFolder(). Created with mkdir when missing.
+%
+%   Outputs:
+%       generatedFiles - 2x1 string column [tlcPath; tmfPath] for piofrtos.tlc
+%           and piofrtos.tmf under targetFolder.
+%
+%   Example:
+%       % Refresh STF/TMF in the package target folder.
+%       generatedFiles = piofrtos.generateTargetFiles();
+%
+%   Other m-files required: getOptionTable, getTargetFolder
+%   Subfunctions: buildSystemTargetFile, buildRtwOptionBlock, getOptionField, ...
+%       toMatlabSingleQuoted, buildTemplateMakefile
+%   MAT-files required: none
+%
+%   See also: GETOPTIONTABLE, CONFIGUREMODEL, SELECTCALLBACK
+
+%   Author: Frey, Jed
+%   28-Sep-2026; Last revision: 28-Sep-2026
+
+%------------- BEGIN CODE --------------
     arguments
         targetFolder (1,1) string = piofrtos.getTargetFolder()
     end
@@ -20,6 +51,25 @@ function generatedFiles = generateTargetFiles(targetFolder)
 end
 
 function lines = buildSystemTargetFile()
+%BUILDSYSTEMTARGETFILE - Build the string lines for piofrtos.tlc.
+%   Local helper for generateTargetFiles. Emits Embedded-C RT assignments,
+%   codegenentry include, BEGIN_RTW_OPTIONS category and per-option blocks from
+%   getOptionTable, plus rtwgensettings with BuildDirSuffix _piofrtos_rtw,
+%   DerivedFrom ert.tlc, and SelectCallback piofrtos.selectCallback.
+%
+%   Syntax:
+%       lines = buildSystemTargetFile()
+%
+%   Inputs:
+%       none
+%
+%   Outputs:
+%       lines - string array of TLC file contents.
+%
+%   Example:
+%       lines = buildSystemTargetFile();
+%
+%   See also: GENERATETARGETFILES, BUILDRTWOPTIONBLOCK
     optionTable = piofrtos.getOptionTable();
     lines = [
         "%% SYSTLC: Arduino FreeRTOS (PlatformIO) TMF: piofrtos.tmf MAKE: make_rtw"
@@ -75,6 +125,26 @@ function lines = buildSystemTargetFile()
 end
 
 function lines = buildRtwOptionBlock(option)
+%BUILDRTWOPTIONBLOCK - Emit one rtwoptions assignment block for the TLC file.
+%   Local helper for buildSystemTargetFile. Formats Prompt, Type, Default,
+%   PopupStrings, TlcVariable, MakeVariable, Tooltip, and Callback using
+%   single-quoted MATLAB string literals via toMatlabSingleQuoted.
+%
+%   Syntax:
+%       lines = buildRtwOptionBlock(option)
+%
+%   Inputs:
+%       option - scalar struct from getOptionTable with required fields and
+%           optional PopupStrings / Callback (defaulted via getOptionField).
+%
+%   Outputs:
+%       lines - string array ending with a blank line after the option block.
+%
+%   Example:
+%       optionTable = piofrtos.getOptionTable();
+%       lines = buildRtwOptionBlock(optionTable(1));
+%
+%   See also: BUILDSYSTEMTARGETFILE, GETOPTIONFIELD, TOMATLABSINGLEQUOTED
     tooltipLiteral = toMatlabSingleQuoted(option.Tooltip);
     defaultLiteral = toMatlabSingleQuoted(option.Default);
     popupLiteral = toMatlabSingleQuoted(getOptionField(option, "PopupStrings", ""));
@@ -96,6 +166,25 @@ function lines = buildRtwOptionBlock(option)
 end
 
 function value = getOptionField(option, fieldName, defaultValue)
+%GETOPTIONFIELD - Read an optional struct field or return a default.
+%   Local helper for buildRtwOptionBlock when PopupStrings or Callback may be
+%   absent from an option struct.
+%
+%   Syntax:
+%       value = getOptionField(option, fieldName, defaultValue)
+%
+%   Inputs:
+%       option - scalar struct.
+%       fieldName - char/string field name to read.
+%       defaultValue - value returned when the field is missing.
+%
+%   Outputs:
+%       value - option.(fieldName) or defaultValue.
+%
+%   Example:
+%       cb = getOptionField(option, "Callback", "");
+%
+%   See also: BUILDRTWOPTIONBLOCK
     if isfield(option, fieldName)
         value = option.(fieldName);
     else
@@ -104,11 +193,47 @@ function value = getOptionField(option, fieldName, defaultValue)
 end
 
 function literal = toMatlabSingleQuoted(value)
+%TOMATLABSINGLEQUOTED - Escape a value as a MATLAB single-quoted string literal.
+%   Local helper for TLC generation. Doubles embedded apostrophes then wraps
+%   the string in single quotes for embedding in rtwoptions assignments.
+%
+%   Syntax:
+%       literal = toMatlabSingleQuoted(value)
+%
+%   Inputs:
+%       value - string or convertible text to quote.
+%
+%   Outputs:
+%       literal - string like 'text' with internal ' escaped as ''.
+%
+%   Example:
+%       literal = toMatlabSingleQuoted("it's");
+%
+%   See also: BUILDRTWOPTIONBLOCK
     escaped = replace(string(value), "'", "''");
     literal = "'" + escaped + "'";
 end
 
 function lines = buildTemplateMakefile()
+%BUILDTEMPLATEMAKEFILE - Build the string lines for piofrtos.tmf.
+%   Local helper for generateTargetFiles. Emits make_rtw macros, expanded
+%   tokens including PIO_PLATFORM through PIO_TASK_STACK_WORDS, optional
+%   include of pio_cmd.mk, and firmware/upload goals that invoke $(PIO_CMD)
+%   run. Model-reference builds skip PlatformIO with an echo message.
+%
+%   Syntax:
+%       lines = buildTemplateMakefile()
+%
+%   Inputs:
+%       none
+%
+%   Outputs:
+%       lines - string array of template makefile contents.
+%
+%   Example:
+%       lines = buildTemplateMakefile();
+%
+%   See also: GENERATETARGETFILES, LOCATEPLATFORMIO
     lines = [
         "# Generated by piofrtos.generateTargetFiles. Do not edit by hand."
         "#"

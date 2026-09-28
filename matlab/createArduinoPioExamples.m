@@ -1,5 +1,35 @@
 function createArduinoPioExamples()
-%createArduinoPioExamples Create Uno example models that use the Common I/O blocks.
+%CREATEARDUINOPIOEXAMPLES - Create Uno example models under examples/.
+%   Ensures the examples folder exists under arduinopio.getRootFolder(), then
+%   builds uno_blink, uno_analog_pwm, uno_serial, and uno_can using Common
+%   MATLAB System I/O blocks configured for piofrtos via startExampleModel.
+%   Also calls createMultirateExample with OpenModel=false so the multirate
+%   demo is written without leaving the model open.
+%
+%   Syntax:
+%       createArduinoPioExamples()
+%
+%   Inputs:
+%       none
+%
+%   Outputs:
+%       none
+%
+%   Example:
+%       createArduinoPioExamples();
+%
+%   Other m-files required: arduinopio.getRootFolder, createMultirateExample,
+%       piofrtos.configureModel
+%   Subfunctions: createBlinkExample, createAnalogPwmExample,
+%       createSerialExample, createCanExample, startExampleModel, resetModel
+%   MAT-files required: none
+%
+%   See also: CREATEARDUINOPIOLIBRARY, BUILD_ALL, CREATEMULTIRATEEXAMPLE
+
+%   Author: Frey, Jed
+%   28-Sep-2026; Last revision: 28-Sep-2026
+
+%------------- BEGIN CODE --------------
 
     rootDir = arduinopio.getRootFolder();
     exampleDir = fullfile(rootDir, "examples");
@@ -15,6 +45,25 @@ function createArduinoPioExamples()
 end
 
 function createBlinkExample(exampleDir)
+%CREATEBLINKEXAMPLE - Build examples/uno_blink.slx LED pulse demo.
+%   Creates a 0.1 s fixed-step model with a sample-based Pulse Generator
+%   (Period 10, PulseWidth 5) driving Digital Output on pin 13 via
+%   arduinopio.blocks.common.DigitalOutput. Saves and closes the model.
+%
+%   Syntax:
+%       createBlinkExample(exampleDir)
+%
+%   Inputs:
+%       exampleDir - Folder path where uno_blink.slx is written
+%
+%   Outputs:
+%       none
+%
+%   Example:
+%       createBlinkExample(fullfile(arduinopio.getRootFolder(), "examples"));
+%
+%   See also: STARTEXAMPLEMODEL, CREATEARDUINOPIOEXAMPLES
+
     modelName = "uno_blink";
     modelPath = fullfile(exampleDir, modelName + ".slx");
     startExampleModel(modelName, modelPath, "0.1");
@@ -35,6 +84,25 @@ function createBlinkExample(exampleDir)
 end
 
 function createAnalogPwmExample(exampleDir)
+%CREATEANALOGPWMEXAMPLE - Build examples/uno_analog_pwm.slx ADC-to-PWM demo.
+%   Creates a 0.05 s fixed-step model reading Analog Input on pin 0, scaling
+%   counts by 255/1023, and writing PWM on pin 5 via arduinopio.blocks.common
+%   AnalogInput and Pwm System objects. Saves and closes the model.
+%
+%   Syntax:
+%       createAnalogPwmExample(exampleDir)
+%
+%   Inputs:
+%       exampleDir - Folder path where uno_analog_pwm.slx is written
+%
+%   Outputs:
+%       none
+%
+%   Example:
+%       createAnalogPwmExample(fullfile(arduinopio.getRootFolder(), "examples"));
+%
+%   See also: STARTEXAMPLEMODEL, CREATEBLINKEXAMPLE
+
     modelName = "uno_analog_pwm";
     modelPath = fullfile(exampleDir, modelName + ".slx");
     startExampleModel(modelName, modelPath, "0.05");
@@ -61,6 +129,25 @@ function createAnalogPwmExample(exampleDir)
 end
 
 function createSerialExample(exampleDir)
+%CREATESERIALEXAMPLE - Build examples/uno_serial.slx UART loopback demo.
+%   Creates a 0.1 s fixed-step model that transmits uint8(65) on Serial Transmit
+%   Port 0 at 9600 baud and receives one byte plus status from Serial Receive on
+%   the same port. Receive outputs feed Terminator sinks. Saves and closes.
+%
+%   Syntax:
+%       createSerialExample(exampleDir)
+%
+%   Inputs:
+%       exampleDir - Folder path where uno_serial.slx is written
+%
+%   Outputs:
+%       none
+%
+%   Example:
+%       createSerialExample(fullfile(arduinopio.getRootFolder(), "examples"));
+%
+%   See also: STARTEXAMPLEMODEL, CREATECANEXAMPLE
+
     modelName = "uno_serial";
     modelPath = fullfile(exampleDir, modelName + ".slx");
     startExampleModel(modelName, modelPath, "0.1");
@@ -94,6 +181,26 @@ function createSerialExample(exampleDir)
 end
 
 function createCanExample(exampleDir)
+%CREATECANEXAMPLE - Build examples/uno_can.slx MCP2515 CAN transmit/receive demo.
+%   Creates a 0.05 s fixed-step model with CanTransmit and CanReceive System
+%   objects in Interpreted execution, ChipSelectPin 10, 8 MHz oscillator,
+%   500 kbps, MessageId 256 on transmit, OperatingMode 1, and terminators on
+%   receive Id, Data, Len, and Status ports. Saves and closes the model.
+%
+%   Syntax:
+%       createCanExample(exampleDir)
+%
+%   Inputs:
+%       exampleDir - Folder path where uno_can.slx is written
+%
+%   Outputs:
+%       none
+%
+%   Example:
+%       createCanExample(fullfile(arduinopio.getRootFolder(), "examples"));
+%
+%   See also: STARTEXAMPLEMODEL, CREATESERIALEXAMPLE
+
     modelName = "uno_can";
     modelPath = fullfile(exampleDir, modelName + ".slx");
     startExampleModel(modelName, modelPath, "0.05");
@@ -137,11 +244,51 @@ function createCanExample(exampleDir)
 end
 
 function startExampleModel(modelName, modelPath, sampleTime)
+%STARTEXAMPLEMODEL - Reset a model and apply piofrtos fixed-step settings.
+%   Calls resetModel to recreate modelName at modelPath, then
+%   piofrtos.configureModel with FixedStep set to sampleTime so the example
+%   targets the PlatformIO FreeRTOS system target file.
+%
+%   Syntax:
+%       startExampleModel(modelName, modelPath, sampleTime)
+%
+%   Inputs:
+%       modelName  - Simulink model name without extension
+%       modelPath  - Full path to the .slx file
+%       sampleTime - Fixed-step size string (for example "0.1")
+%
+%   Outputs:
+%       none
+%
+%   Example:
+%       startExampleModel("uno_blink", modelPath, "0.1");
+%
+%   See also: RESETMODEL, PIOFRTOS.CONFIGUREMODEL
+
     resetModel(modelName, modelPath);
     piofrtos.configureModel(modelName, FixedStep=sampleTime);
 end
 
 function resetModel(modelName, modelPath)
+%RESETMODEL - Close, delete, and recreate an empty Simulink model file.
+%   If modelName is loaded, closes without saving. Deletes modelPath when present,
+%   then new_system and load_system so callers can add blocks to a clean model.
+%
+%   Syntax:
+%       resetModel(modelName, modelPath)
+%
+%   Inputs:
+%       modelName - Simulink model name
+%       modelPath - Full path to the .slx to replace
+%
+%   Outputs:
+%       none
+%
+%   Example:
+%       resetModel("uno_blink", fullfile(exampleDir, "uno_blink.slx"));
+%
+%   See also: STARTEXAMPLEMODEL
+
     if bdIsLoaded(modelName)
         close_system(modelName, 0);
     end

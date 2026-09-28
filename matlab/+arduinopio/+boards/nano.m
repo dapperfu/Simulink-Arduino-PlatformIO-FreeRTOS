@@ -1,6 +1,37 @@
 function info = nano()
-%nano Capability and pin map for Arduino Nano (ATmega328P).
+%NANO - Capability and pin map for Arduino Nano (ATmega328P).
+%   Starts from the Uno map, then sets Nano identity and AnalogPins 0:7 (A6/A7
+%   analog-only). Implemented AVR; same PWM timers and UART/EEPROM as Uno.
+%   Package path: arduinopio.boards.nano.
+%
+%   Syntax:
+%       info = arduinopio.boards.nano()
+%
+%   Inputs:
+%       none
+%
+%   Outputs:
+%       info - struct based on uno() with overrides:
+%           Name - "nano"; DisplayName - "Arduino Nano"; Mcu - "ATmega328P";
+%           Architecture - "avr"; Implemented - true; AnalogPins - 0:7;
+%           Notes - Nano/WDT/Timer1/CAN notes.
+%           Inherited from Uno: DigitalPins 0:19, PwmPins [3,5,6,9,10,11],
+%           InterruptPins [2,3], CapturePins 8, UartCount 1, EepromSize 1024,
+%           PwmTimers (pins 3/5/6/9/10/11 on timers 2/0/0/1/1/2), HasMcp2515 true.
+%
+%   Example:
+%       info = arduinopio.boards.nano();
+%
+%   Other m-files required: arduinopio.boards.uno
+%   Subfunctions: none
+%   MAT-files required: none
+%
+%   See also: UNO, GETBOARD, LISTBOARDS
 
+%   Author: Frey, Jed
+%   28-Sep-2026; Last revision: 28-Sep-2026
+
+%------------- BEGIN CODE --------------
     info = arduinopio.boards.uno();
     info.Name = "nano";
     info.DisplayName = "Arduino Nano";

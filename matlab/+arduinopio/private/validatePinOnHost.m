@@ -1,6 +1,32 @@
 function validatePinOnHost(pin, kind)
-%validatePinOnHost MATLAB-only pin check against the active board map.
+%VALIDATEPINONHOST - Error if PIN is not allowed for KIND on the active board.
+%   MATLAB-only. Selects DigitalPins, AnalogPins, PwmPins, InterruptPins, or
+%   CapturePins from getBoard() and errors arduinopio:InvalidPin when pin is
+%   not a member. Private; called from validatePin via coder.extrinsic.
+%
+%   Syntax:
+%       validatePinOnHost(pin, kind)
+%
+%   Inputs:
+%       pin - integer. Pin number to validate.
+%       kind - text. One of "digital", "analog", "pwm", "interrupt", "capture".
+%
+%   Outputs:
+%       none
+%
+%   Example:
+%       validatePinOnHost(13, "digital");
+%
+%   Other m-files required: arduinopio.boards.getBoard
+%   Subfunctions: none
+%   MAT-files required: none
+%
+%   See also: VALIDATEPIN, GETBOARD
 
+%   Author: Frey, Jed
+%   28-Sep-2026; Last revision: 28-Sep-2026
+
+%------------- BEGIN CODE --------------
     kindName = string(kind);
     info = arduinopio.boards.getBoard();
     switch kindName
