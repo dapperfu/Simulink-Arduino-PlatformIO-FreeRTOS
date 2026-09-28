@@ -6,5 +6,5 @@ function writeRtwScalar(block, name, value)
         value (1,1) {mustBeNumeric}
     end
 
-    block.WriteRTWParam("string", name, sprintf("%.17g", double(value)));
+    block.WriteRTWParam('matrix', char(name), double(value));
 end

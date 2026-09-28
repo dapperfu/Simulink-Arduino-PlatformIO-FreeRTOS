@@ -1,5 +1,4 @@
 #include "arduinopio_pwm_avr.h"
-#include "arduinopio_lock.h"
 
 #include <Arduino.h>
 
@@ -33,7 +32,6 @@ extern "C" {
 
 void arduinopioPwmAvrSetup(uint8_t pin, uint8_t timerId, uint8_t prescalerSelect, uint8_t fastPwm)
 {
-    arduinopioLock();
     pinMode(pin, OUTPUT);
 #if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328__)
     configureTimer(timerId, prescalerSelect, fastPwm);
@@ -43,14 +41,11 @@ void arduinopioPwmAvrSetup(uint8_t pin, uint8_t timerId, uint8_t prescalerSelect
     (void)fastPwm;
 #endif
     analogWrite(pin, 0);
-    arduinopioUnlock();
 }
 
 void arduinopioPwmAvrWrite(uint8_t pin, uint8_t duty)
 {
-    arduinopioLock();
     analogWrite(pin, duty);
-    arduinopioUnlock();
 }
 
 }

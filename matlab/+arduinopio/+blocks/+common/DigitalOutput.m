@@ -22,14 +22,19 @@ classdef (Sealed) DigitalOutput < matlab.System & coder.ExternalDependency
 
         function setupImpl(obj)
             if coder.target("Rtw")
-                coder.cinclude("arduinopio_gpio.h");
-                coder.ceval("arduinopioDigitalOutputSetup", uint8(obj.Pin));
+                coder.cinclude("arduinopio_arduino.h");
+                coder.ceval("pinMode", uint8(obj.Pin), coder.opaque("uint8_t", "OUTPUT"));
             end
         end
 
         function stepImpl(obj, u)
             if coder.target("Rtw")
-                coder.ceval("arduinopioDigitalWrite", uint8(obj.Pin), uint8(u ~= 0));
+                coder.cinclude("arduinopio_arduino.h");
+                if u ~= 0
+                    coder.ceval("digitalWrite", uint8(obj.Pin), coder.opaque("uint8_t", "HIGH"));
+                else
+                    coder.ceval("digitalWrite", uint8(obj.Pin), coder.opaque("uint8_t", "LOW"));
+                end
             end
         end
 
@@ -45,8 +50,8 @@ classdef (Sealed) DigitalOutput < matlab.System & coder.ExternalDependency
             flag = false;
         end
 
-        function icon = getIconImpl(~)
-            icon = "Digital Output";
+        function icon = getIconImpl(obj)
+            icon = arduinopio.iconWithPin("Digital Output", obj.Pin);
         end
 
         function sts = getSampleTimeImpl(obj)
@@ -68,7 +73,7 @@ classdef (Sealed) DigitalOutput < matlab.System & coder.ExternalDependency
         end
 
         function updateBuildInfo(buildInfo, context)
-            arduinopio.updateDriverBuildInfo(buildInfo, context, "arduinopio_gpio.cpp");
+            arduinopio.updateDriverBuildInfo(buildInfo, context);
         end
     end
 
@@ -77,7 +82,7 @@ classdef (Sealed) DigitalOutput < matlab.System & coder.ExternalDependency
             header = matlab.system.display.Header( ...
                 "arduinopio.blocks.common.DigitalOutput", ...
                 Title="Digital Output", ...
-                Text="Set the logical state of a digital pin. Uno LED_BUILTIN is pin 13.");
+                Text="MATLAB System object path: setupImpl/stepImpl emit coder.ceval pinMode/digitalWrite.");
         end
     end
 end

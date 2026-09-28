@@ -20,17 +20,13 @@ classdef (Sealed) AnalogInput < matlab.System & coder.ExternalDependency
             arduinopio.validatePin(obj.Pin, "analog");
         end
 
-        function setupImpl(obj)
-            if coder.target("Rtw")
-                coder.cinclude("arduinopio_adc.h");
-                coder.ceval("arduinopioAnalogSetup", uint8(obj.Pin));
-            end
-        end
-
         function y = stepImpl(obj)
             y = uint16(0);
             if coder.target("Rtw")
-                y = coder.ceval("arduinopioAnalogRead", uint8(obj.Pin));
+                value = int32(0);
+                coder.cinclude("arduinopio_arduino.h");
+                value = coder.ceval("analogRead", uint8(obj.Pin));
+                y = uint16(value);
             end
         end
 
@@ -58,8 +54,8 @@ classdef (Sealed) AnalogInput < matlab.System & coder.ExternalDependency
             out = true;
         end
 
-        function icon = getIconImpl(~)
-            icon = "Analog Input";
+        function icon = getIconImpl(obj)
+            icon = arduinopio.iconWithPin("Analog Input", obj.Pin);
         end
 
         function sts = getSampleTimeImpl(obj)
@@ -81,7 +77,7 @@ classdef (Sealed) AnalogInput < matlab.System & coder.ExternalDependency
         end
 
         function updateBuildInfo(buildInfo, context)
-            arduinopio.updateDriverBuildInfo(buildInfo, context, "arduinopio_adc.cpp");
+            arduinopio.updateDriverBuildInfo(buildInfo, context);
         end
     end
 

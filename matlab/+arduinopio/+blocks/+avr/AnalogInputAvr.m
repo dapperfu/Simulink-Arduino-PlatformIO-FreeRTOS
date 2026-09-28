@@ -59,8 +59,8 @@ classdef (Sealed) AnalogInputAvr < matlab.System & coder.ExternalDependency
             f = true;
         end
 
-        function icon = getIconImpl(~)
-            icon = "Analog Input AVR";
+        function icon = getIconImpl(obj)
+            icon = arduinopio.iconWithPin("Analog Input AVR", obj.Pin);
         end
 
         function sts = getSampleTimeImpl(obj)

@@ -23,7 +23,9 @@ classdef (Sealed) HardwareInterruptAvr < matlab.System & coder.ExternalDependenc
 
         function y = stepImpl(obj, simIrq)
             if coder.target("Rtw")
-                y = (coder.ceval("arduinopioHwIntAvrTake", uint8(obj.SourceId)) ~= 0);
+                pending = uint8(0);
+                pending = coder.ceval("arduinopioHwIntAvrTake", uint8(obj.SourceId));
+                y = (pending ~= 0);
             else
                 y = logical(simIrq);
             end

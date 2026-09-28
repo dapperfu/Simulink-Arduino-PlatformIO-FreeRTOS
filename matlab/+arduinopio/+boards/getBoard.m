@@ -12,6 +12,8 @@ function info = getBoard(boardId)
     switch lower(boardId)
         case {"uno", "arduino uno", "arduino uno r3", "uno r3"}
             info = arduinopio.boards.uno();
+        case {"nano", "arduino nano", "nanoatmega328", "nanoatmega328new"}
+            info = arduinopio.boards.nano();
         case {"mega2560", "mega", "arduino mega 2560"}
             info = arduinopio.boards.mega2560();
         case {"due", "arduino due"}
@@ -38,6 +40,21 @@ function boardId = resolveActiveBoardId()
         if strlength(string(modelName)) == 0
             return
         end
+    catch
+        return
+    end
+
+    try
+        pioBoard = string(get_param(modelName, "PioBoard"));
+        if strlength(strip(pioBoard)) > 0
+            boardId = pioBoard;
+            return
+        end
+    catch
+        % PioBoard is unavailable until this target is selected.
+    end
+
+    try
         hardwareBoard = string(get_param(modelName, "HardwareBoard"));
         if hardwareBoard ~= "" && hardwareBoard ~= "None"
             boardId = hardwareBoard;

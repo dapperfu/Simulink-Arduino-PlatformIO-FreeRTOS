@@ -9,7 +9,7 @@
 %function Start(block, system) Output
   /* %<Type> Block: %<Name> */
   {
-    arduinopioUartSetup((uint8_T)%<SFcnParamSettings.Port>, (uint32_T)%<SFcnParamSettings.BaudRate>);
+    arduinopioUartSetup((uint8_T)%<block.ParamSettings.Port>, (uint32_T)%<block.ParamSettings.BaudRate>);
   }
 %endfunction
 
@@ -17,13 +17,13 @@
   /* %<Type> Block: %<Name> */
   {
     uint8_T *y = (uint8_T *)%<LibBlockOutputSignalAddr(0, "", "", 0)>;
-    uint8_T length = (uint8_T)%<SFcnParamSettings.DataLength>;
+    uint8_T length = (uint8_T)%<block.ParamSettings.DataLength>;
     uint8_T n;
     uint8_T i;
     for (i = 0U; i < length; i++) {
       y[i] = 0U;
     }
-    n = arduinopioUartRead((uint8_T)%<SFcnParamSettings.Port>, y, length);
+    n = arduinopioUartRead((uint8_T)%<block.ParamSettings.Port>, y, length);
     %<LibBlockOutputSignal(1, "", "", 0)> = (boolean_T)(n > 0U);
   }
 %endfunction

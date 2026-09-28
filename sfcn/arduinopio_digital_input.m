@@ -1,5 +1,5 @@
 function arduinopio_digital_input(block)
-%arduinopio_digital_input Level-2 MATLAB S-function for a digital input pin.
+%arduinopio_digital_input Level-2 MATLAB S-function for pinMode / digitalRead.
     setup(block);
 end
 
@@ -24,18 +24,16 @@ end
 
 function checkParameters(block)
     pin = block.DialogPrm(1).Data;
-    pullup = block.DialogPrm(2).Data;
+    pinPull = block.DialogPrm(2).Data;
     simValue = block.DialogPrm(4).Data;
     if ~(isscalar(pin) && isnumeric(pin) && isfinite(pin))
         error("arduinopio:InvalidDialog", "Pin must be a real scalar.");
-    end
-    if ~(isscalar(pullup) && isnumeric(pullup))
-        error("arduinopio:InvalidDialog", "Pullup must be 0 or 1.");
     end
     if ~(isscalar(simValue) && isnumeric(simValue) && isfinite(simValue))
         error("arduinopio:InvalidDialog", "SimValue must be a real scalar.");
     end
     arduinopio.validatePin(pin, "digital");
+    arduinopio.validatePinPull(pinPull);
 end
 
 function outputs(block)
@@ -45,5 +43,5 @@ end
 
 function writeRtw(block)
     arduinopio.sfcn.writeRtwScalar(block, "Pin", block.DialogPrm(1).Data);
-    arduinopio.sfcn.writeRtwScalar(block, "Pullup", block.DialogPrm(2).Data ~= 0);
+    arduinopio.sfcn.writeRtwScalar(block, "PinPull", arduinopio.pinPullIndex(block.DialogPrm(2).Data));
 end

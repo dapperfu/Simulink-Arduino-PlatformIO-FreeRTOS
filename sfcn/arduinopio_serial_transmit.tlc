@@ -9,7 +9,7 @@
 %function Start(block, system) Output
   /* %<Type> Block: %<Name> */
   {
-    arduinopioUartSetup((uint8_T)%<SFcnParamSettings.Port>, (uint32_T)%<SFcnParamSettings.BaudRate>);
+    arduinopioUartSetup((uint8_T)%<block.ParamSettings.Port>, (uint32_T)%<block.ParamSettings.BaudRate>);
   }
 %endfunction
 
@@ -26,6 +26,6 @@
     } else {
       length = (uint8_T)width;
     }
-    arduinopioUartWrite((uint8_T)%<SFcnParamSettings.Port>, u, length);
+    arduinopioUartWrite((uint8_T)%<block.ParamSettings.Port>, u, length);
   }
 %endfunction

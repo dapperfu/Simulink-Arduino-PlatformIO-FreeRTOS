@@ -28,6 +28,7 @@ function createArduinoPioLibrary()
     addLibrarySubsystem(libName, "ESP32-WROOM", [510, 30, 710, 80]);
     addLibrarySubsystem(libName, "Uno R4", [510, 110, 710, 160]);
     addLibrarySubsystem(libName, "Nano 33 BLE", [510, 190, 710, 240]);
+    addLibrarySubsystem(libName, "Digital IO Methods", [750, 30, 990, 80]);
 
     common = libName + "/Common";
     addDigitalInputBlock(common, 1);
@@ -49,6 +50,10 @@ function createArduinoPioLibrary()
     addSystemBlock(common, "Input Capture", "arduinopio.blocks.common.InputCapture", 16);
     addSystemBlock(common, "EEPROM Read", "arduinopio.blocks.common.EepromRead", 17);
     addSystemBlock(common, "EEPROM Write", "arduinopio.blocks.common.EepromWrite", 18);
+    addSystemBlock(common, "CAN Transmit", "arduinopio.blocks.common.CanTransmit", 19);
+    addSystemBlock(common, "CAN Receive", "arduinopio.blocks.common.CanReceive", 20);
+
+    addDigitalIoMethodLibrary(libName + "/Digital IO Methods");
 
     avr = libName + "/Advanced AVR";
     addSystemBlock(avr, "Analog Input AVR", "arduinopio.blocks.avr.AnalogInputAvr", 1);
@@ -101,19 +106,82 @@ function dest = addSFunctionBlock(parent, name, sfcnName, index, numericParamete
         Parameters=numericParameters);
 end
 
+function addDigitalIoMethodLibrary(parent)
+    addLibrarySubsystem(parent, "Level-2 MATLAB S-Function", [30, 30, 250, 80]);
+    addLibrarySubsystem(parent, "MATLAB System object", [30, 110, 250, 160]);
+    addLibrarySubsystem(parent, "Level-2 C S-Function", [30, 190, 250, 240]);
+
+    level2Matlab = parent + "/Level-2 MATLAB S-Function";
+    addDigitalInputBlock(level2Matlab, 1);
+    addDigitalOutputBlock(level2Matlab, 2);
+
+    systemObject = parent + "/MATLAB System object";
+    addSystemDigitalIoBlock(systemObject, "Digital Input", ...
+        "arduinopio.blocks.common.DigitalInput", 1);
+    addSystemDigitalIoBlock(systemObject, "Digital Output", ...
+        "arduinopio.blocks.common.DigitalOutput", 2);
+
+    level2C = parent + "/Level-2 C S-Function";
+    addCDigitalInputBlock(level2C, 1);
+    addCDigitalOutputBlock(level2C, 2);
+end
+
+function addSystemDigitalIoBlock(parent, name, className, index)
+    dest = parent + "/" + name;
+    add_block("simulink/User-Defined Functions/MATLAB System", dest, ...
+        Position=blockPosition(index));
+    set_param(dest, "System", className);
+    set_param(dest, "SimulateUsing", "Interpreted execution");
+end
+
+function dest = addCSfunctionBlock(parent, name, sfcnName, index, numericParameters)
+    dest = parent + "/" + name;
+    add_block("simulink/User-Defined Functions/S-Function", dest, ...
+        Position=blockPosition(index), ...
+        FunctionName=sfcnName, ...
+        Parameters=numericParameters);
+end
+
+function addCDigitalInputBlock(parent, index)
+    dest = addCSfunctionBlock(parent, "Digital Input", "arduinopio_digital_input_c", ...
+        index, "2, 0, -1, 0");
+    mask = Simulink.Mask.create(dest);
+    mask.Type = "Arduino PIO Digital Input (Level-2 C)";
+    mask.Description = "Level-2 C S-function. Output is boolean. Mex file required for simulation.";
+    mask.Display = arduinopio.maskDisplayWithPin("Digital Input C");
+    mask.addParameter(Type="edit", Name="Pin", Prompt="Pin number", Value="2");
+    addInternalResistorParameter(mask);
+    mask.addParameter(Type="edit", Name="SampleTime", Prompt="Sample time (-1 = inherited)", Value="-1");
+    mask.addParameter(Type="edit", Name="SimValue", Prompt="Simulation output (0 or 1)", Value="0");
+    mask.Initialization = "PinPull = arduinopio.pinPullIndex(InternalResistor);";
+    set_param(dest, "Parameters", "Pin, PinPull, SampleTime, SimValue");
+end
+
+function addCDigitalOutputBlock(parent, index)
+    dest = addCSfunctionBlock(parent, "Digital Output", "arduinopio_digital_output_c", ...
+        index, "13, -1");
+    mask = Simulink.Mask.create(dest);
+    mask.Type = "Arduino PIO Digital Output (Level-2 C)";
+    mask.Description = "Level-2 C S-function. Input is double. Mex file required for simulation.";
+    mask.Display = arduinopio.maskDisplayWithPin("Digital Output C");
+    mask.addParameter(Type="edit", Name="Pin", Prompt="Pin number", Value="13");
+    mask.addParameter(Type="edit", Name="SampleTime", Prompt="Sample time (-1 = inherited)", Value="-1");
+    set_param(dest, "Parameters", "Pin, SampleTime");
+end
+
 function addDigitalInputBlock(parent, index)
     dest = addSFunctionBlock(parent, "Digital Input", "arduinopio_digital_input", ...
         index, "2, 0, -1, 0");
     mask = Simulink.Mask.create(dest);
     mask.Type = "Arduino PIO Digital Input";
-    mask.Description = "Read a digital pin. Uno pins 0-13 and A0-A5 (14-19) are valid.";
-    mask.Display = "disp('Digital Input')";
+    mask.Description = "Read a digital pin. Internal resistor: None, Pull-up, or Pull-down.";
+    mask.Display = arduinopio.maskDisplayWithPin("Digital Input");
     mask.addParameter(Type="edit", Name="Pin", Prompt="Pin number", Value="2");
-    mask.addParameter(Type="checkbox", Name="EnablePullup", Prompt="Enable pull-up", Value="off");
+    addInternalResistorParameter(mask);
     mask.addParameter(Type="edit", Name="SampleTime", Prompt="Sample time (-1 = inherited)", Value="-1");
     mask.addParameter(Type="edit", Name="SimValue", Prompt="Simulation output (0 or 1)", Value="0");
-    mask.Initialization = "Pullup = double(strcmp(EnablePullup, 'on'));";
-    set_param(dest, "Parameters", "Pin, Pullup, SampleTime, SimValue");
+    mask.Initialization = "PinPull = arduinopio.pinPullIndex(InternalResistor);";
+    set_param(dest, "Parameters", "Pin, PinPull, SampleTime, SimValue");
 end
 
 function addDigitalOutputBlock(parent, index)
@@ -122,7 +190,7 @@ function addDigitalOutputBlock(parent, index)
     mask = Simulink.Mask.create(dest);
     mask.Type = "Arduino PIO Digital Output";
     mask.Description = "Write a digital pin. Uno LED_BUILTIN is pin 13.";
-    mask.Display = "disp('Digital Output')";
+    mask.Display = arduinopio.maskDisplayWithPin("Digital Output");
     mask.addParameter(Type="edit", Name="Pin", Prompt="Pin number", Value="13");
     mask.addParameter(Type="edit", Name="SampleTime", Prompt="Sample time (-1 = inherited)", Value="-1");
     set_param(dest, "Parameters", "Pin, SampleTime");
@@ -134,7 +202,7 @@ function addAnalogInputBlock(parent, index)
     mask = Simulink.Mask.create(dest);
     mask.Type = "Arduino PIO Analog Input";
     mask.Description = "Uno A0-A5 as pin 0-5. Output is 0-1023 for a 10-bit ADC.";
-    mask.Display = "disp('Analog Input')";
+    mask.Display = arduinopio.maskDisplayWithPin("Analog Input");
     mask.addParameter(Type="edit", Name="Pin", Prompt="Analog pin (0 = A0)", Value="0");
     mask.addParameter(Type="edit", Name="SampleTime", Prompt="Sample time (-1 = inherited)", Value="-1");
     mask.addParameter(Type="edit", Name="SimValue", Prompt="Simulation ADC counts (0-1023)", Value="0");
@@ -147,7 +215,7 @@ function addAnalogOutputBlock(parent, index)
     mask = Simulink.Mask.create(dest);
     mask.Type = "Arduino PIO Analog Output";
     mask.Description = "Arduino analogWrite on a PWM pin. Input is 0-255. Uno PWM pins: 3, 5, 6, 9, 10, 11.";
-    mask.Display = "disp('Analog Output')";
+    mask.Display = arduinopio.maskDisplayWithPin("Analog Output");
     mask.addParameter(Type="edit", Name="Pin", Prompt="PWM pin", Value="5");
     mask.addParameter(Type="edit", Name="SampleTime", Prompt="Sample time (-1 = inherited)", Value="-1");
     set_param(dest, "Parameters", "Pin, SampleTime");
@@ -216,23 +284,31 @@ function addInterruptSubsystem(parent, name, className, kind, index)
     add_line(dest, chartPh.Outport(1), outPh.Inport(1));
 
     mask = Simulink.Mask.create(dest);
-    mask.Display = "disp('" + name + "')";
     if kind == "extint"
+        mask.Display = arduinopio.maskDisplayWithPin(name);
         mask.Type = "Arduino PIO External Interrupt";
-        mask.Description = "Uno INT0/INT1 (pins 2 and 3). Connect IRQ to a Function-Call Subsystem. SimIRQ is simulation-only.";
-        mask.addParameter(Type="edit", Name="Pin", Prompt="Pin number (Uno: 2 or 3)", Value="2");
-        mask.addParameter(Type="edit", Name="Mode", Prompt="Mode (0=LOW, 1=CHANGE, 2=FALLING, 3=RISING)", Value="3");
-        mask.addParameter(Type="checkbox", Name="EnablePullup", Prompt="Enable pull-up", Value="off");
-        mask.Initialization = sprintf("%s\n%s\n%s", ...
-            "set_param([gcb '/Driver'], 'Pin', Pin);", ...
-            "set_param([gcb '/Driver'], 'Mode', Mode);", ...
-            "set_param([gcb '/Driver'], 'EnablePullup', EnablePullup);");
+        mask.Description = "Uno INT0/INT1 (pins 2 and 3). Internal resistor: None, Pull-up, or Pull-down. Connect IRQ to a Function-Call Subsystem. SimIRQ is simulation-only.";
+        mask.addParameter(Type="promote", TypeOptions={"Driver/Pin"}, Name="Pin", ...
+            Prompt="Pin number (Uno: 2 or 3)");
+        mask.addParameter(Type="promote", TypeOptions={"Driver/Mode"}, Name="Mode", ...
+            Prompt="Mode (0=LOW, 1=CHANGE, 2=FALLING, 3=RISING)");
+        mask.addParameter(Type="promote", TypeOptions={"Driver/PinPull"}, Name="PinPull", ...
+            Prompt="Internal resistor");
     else
+        mask.Display = "disp('" + name + "')";
         mask.Type = "Arduino PIO Hardware Interrupt AVR";
         mask.Description = "0=Timer1 overflow, 1=Timer1 compare A, 2=Timer2 overflow, 3=ADC complete.";
-        mask.addParameter(Type="edit", Name="SourceId", Prompt="SourceId (0=T1 ovf, 1=T1 cmpA, 2=T2 ovf, 3=ADC)", Value="0");
-        mask.Initialization = "set_param([gcb '/Driver'], 'SourceId', SourceId);";
+        mask.addParameter(Type="promote", TypeOptions={"Driver/SourceId"}, Name="SourceId", ...
+            Prompt="SourceId (0=T1 ovf, 1=T1 cmpA, 2=T2 ovf, 3=ADC)");
     end
+end
+
+function addInternalResistorParameter(mask)
+    names = cellstr(arduinopio.pinPullNames());
+    parameter = mask.addParameter(Type="popup", Name="InternalResistor", Prompt="Internal resistor");
+    parameter.TypeOptions = names;
+    parameter.Evaluate = "off";
+    parameter.Value = names{1};
 end
 
 function position = blockPosition(index)

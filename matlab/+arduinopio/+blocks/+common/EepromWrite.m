@@ -15,12 +15,7 @@ classdef (Sealed) EepromWrite < matlab.System & coder.ExternalDependency
 
     methods (Access = protected)
         function validatePropertiesImpl(obj)
-            info = arduinopio.boards.getBoard();
-            if obj.StartAddress >= info.EepromSize
-                error("arduinopio:EepromRange", ...
-                    "EEPROM start address %d is outside %s size %d.", ...
-                    obj.StartAddress, info.DisplayName, info.EepromSize);
-            end
+            arduinopio.validateEepromRange(obj.StartAddress, 1);
         end
 
         function setupImpl(~)

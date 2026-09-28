@@ -1,5 +1,4 @@
 #include "arduinopio_spi.h"
-#include "arduinopio_lock.h"
 
 #include <Arduino.h>
 #include <SPI.h>
@@ -30,11 +29,9 @@ void arduinopioSpiSetup(uint8_t chipSelectPin, uint32_t clockHz, uint8_t spiMode
     gSpiMode = spiMode;
     gSpiBitOrder = bitOrder;
 
-    arduinopioLock();
     pinMode(chipSelectPin, OUTPUT);
     digitalWrite(chipSelectPin, HIGH);
     SPI.begin();
-    arduinopioUnlock();
 }
 
 void arduinopioSpiWriteRead(uint8_t chipSelectPin, const uint8_t *txData, uint8_t *rxData, uint8_t length)
@@ -42,7 +39,6 @@ void arduinopioSpiWriteRead(uint8_t chipSelectPin, const uint8_t *txData, uint8_
     uint8_t i;
     BitOrder order = (gSpiBitOrder != 0) ? MSBFIRST : LSBFIRST;
 
-    arduinopioLock();
     SPI.beginTransaction(SPISettings(gSpiClockHz, order, toArduinoSpiMode(gSpiMode)));
     digitalWrite(chipSelectPin, LOW);
     for (i = 0; i < length; ++i) {
@@ -50,7 +46,6 @@ void arduinopioSpiWriteRead(uint8_t chipSelectPin, const uint8_t *txData, uint8_
     }
     digitalWrite(chipSelectPin, HIGH);
     SPI.endTransaction();
-    arduinopioUnlock();
 }
 
 }

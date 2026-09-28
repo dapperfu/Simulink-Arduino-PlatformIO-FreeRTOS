@@ -76,12 +76,20 @@ static uint8_t toArduinoMode(uint8_t mode)
 
 extern "C" {
 
-void arduinopioExtIntSetup(uint8_t pin, uint8_t mode, uint8_t pullup)
+void arduinopioExtIntSetup(uint8_t pin, uint8_t mode, uint8_t pinPull)
 {
     int8_t index;
     void (*isr)(void);
 
-    pinMode(pin, pullup ? INPUT_PULLUP : INPUT);
+    if (pinPull == 1) {
+        pinMode(pin, INPUT_PULLUP);
+#ifdef INPUT_PULLDOWN
+    } else if (pinPull == 2) {
+        pinMode(pin, INPUT_PULLDOWN);
+#endif
+    } else {
+        pinMode(pin, INPUT);
+    }
     index = indexForPin(pin);
     if (index < 0) {
         if (gExtIntUsed >= ARDUINOPIO_MAX_EXTINT) {

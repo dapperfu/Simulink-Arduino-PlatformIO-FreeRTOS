@@ -4,8 +4,13 @@ classdef (Sealed) ExternalInterrupt < matlab.System & coder.ExternalDependency
     properties (Nontunable)
         Pin (1,1) {mustBeInteger, mustBeNonnegative} = 2
         Mode (1,1) {mustBeInteger, mustBeMember(Mode, [0, 1, 2, 3])} = 3
-        EnablePullup (1,1) logical = false
+        % Internal resistor
+        PinPull = 'None'
         SampleTime (1,1) double = -1
+    end
+
+    properties (Constant, Hidden)
+        PinPullSet = matlab.system.StringSet({'None', 'Pull-up', 'Pull-down'})
     end
 
     methods
@@ -18,18 +23,22 @@ classdef (Sealed) ExternalInterrupt < matlab.System & coder.ExternalDependency
     methods (Access = protected)
         function validatePropertiesImpl(obj)
             arduinopio.validatePin(obj.Pin, "interrupt");
+            arduinopio.validatePinPull(obj.PinPull);
         end
 
         function setupImpl(obj)
             if coder.target("Rtw")
                 coder.cinclude("arduinopio_extint.h");
-                coder.ceval("arduinopioExtIntSetup", uint8(obj.Pin), uint8(obj.Mode), uint8(obj.EnablePullup));
+                coder.ceval("arduinopioExtIntSetup", uint8(obj.Pin), uint8(obj.Mode), ...
+                    uint8(arduinopio.pinPullIndex(obj.PinPull)));
             end
         end
 
         function y = stepImpl(obj, simIrq)
             if coder.target("Rtw")
-                y = (coder.ceval("arduinopioExtIntTake", uint8(obj.Pin)) ~= 0);
+                pending = uint8(0);
+                pending = coder.ceval("arduinopioExtIntTake", uint8(obj.Pin));
+                y = (pending ~= 0);
             else
                 y = logical(simIrq);
             end
@@ -59,8 +68,8 @@ classdef (Sealed) ExternalInterrupt < matlab.System & coder.ExternalDependency
             f = true;
         end
 
-        function icon = getIconImpl(~)
-            icon = "External Interrupt";
+        function icon = getIconImpl(obj)
+            icon = arduinopio.iconWithPin("External Interrupt", obj.Pin);
         end
 
         function sts = getSampleTimeImpl(obj)
@@ -91,7 +100,7 @@ classdef (Sealed) ExternalInterrupt < matlab.System & coder.ExternalDependency
             header = matlab.system.display.Header( ...
                 "arduinopio.blocks.common.ExternalInterrupt", ...
                 Title="External Interrupt", ...
-                Text="Uno pins 2 (INT0) and 3 (INT1). Mode: 0=LOW, 1=CHANGE, 2=FALLING, 3=RISING. SimIRQ is used only in simulation.");
+                Text="Uno pins 2 (INT0) and 3 (INT1). Mode: 0=LOW, 1=CHANGE, 2=FALLING, 3=RISING. Internal resistor: None, Pull-up, or Pull-down.");
         end
     end
 end

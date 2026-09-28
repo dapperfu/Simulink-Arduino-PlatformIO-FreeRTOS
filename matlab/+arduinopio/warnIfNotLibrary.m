@@ -1,20 +1,14 @@
-function warnIfNotLibrary(warningId, messageText, varargin)
+function warnIfNotLibrary(warningId, messageText)
 %warnIfNotLibrary Issue a warning unless the current diagram is a library.
+%   Diagram queries are MATLAB-only; code generation skips the warning.
 
     arguments
         warningId (1,1) string
         messageText (1,1) string
     end
-    arguments (Repeating)
-        varargin
-    end
 
-    try
-        if string(get_param(bdroot, "BlockDiagramType")) == "library"
-            return
-        end
-    catch
-        % No diagram is loaded. Continue and warn.
+    coder.extrinsic("warnIfNotLibraryOnHost");
+    if coder.target("MATLAB")
+        warnIfNotLibraryOnHost(warningId, messageText);
     end
-    warning(warningId, messageText, varargin{:});
 end

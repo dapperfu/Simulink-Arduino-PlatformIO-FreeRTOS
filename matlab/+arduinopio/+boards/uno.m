@@ -19,10 +19,12 @@ function info = uno()
     info.UartPins = struct("Rx", 0, "Tx", 1);
     info.EepromSize = 1024;
     info.AdcBits = 10;
+    info.HasInputPulldown = false;
     info.HasDac = false;
     info.HasBle = false;
     info.HasWifi = false;
     info.HasOnboardCan = false;
+    info.HasMcp2515 = true;
     info.HasLedMatrix = false;
     info.BuiltinLedPin = 13;
     info.PwmTimers = [ ...
@@ -36,5 +38,6 @@ function info = uno()
     info.Notes = [ ...
         "Classic Uno R3 / ATmega328P only."
         "Prefer a WDT FreeRTOS tick so Timer1 and Timer2 stay available for PWM."
-        "Timer1 is shared by PWM pins 9/10, Servo, and Input Capture on D8."];
+        "Timer1 is shared by PWM pins 9/10, Servo, and Input Capture on D8."
+        "CAN uses an MCP2515 on SPI. Default CS is pin 10; INT is unused because receive polls."];
 end

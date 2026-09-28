@@ -19,12 +19,7 @@ classdef (Sealed) SerialReceive < matlab.System & coder.ExternalDependency
 
     methods (Access = protected)
         function validatePropertiesImpl(obj)
-            info = arduinopio.boards.getBoard();
-            if obj.Port >= info.UartCount
-                error("arduinopio:InvalidUart", ...
-                    "%s has %d UART(s). Port must be in 0:%d.", ...
-                    info.DisplayName, info.UartCount, info.UartCount-1);
-            end
+            arduinopio.validateUartPort(obj.Port);
         end
 
         function setupImpl(obj)

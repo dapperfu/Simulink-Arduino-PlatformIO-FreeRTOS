@@ -1,8 +1,15 @@
 function buildArduinoPioSFunctions()
-%buildArduinoPioSFunctions Compile the interrupt S-functions for simulation.
-
+%buildArduinoPioSFunctions Compile C S-functions needed for simulation.
     rootDir = arduinopio.getRootFolder();
     sfcnDir = fullfile(rootDir, "sfcn");
-    mex(fullfile(sfcnDir, "arduinopio_extint.c"), "-outdir", sfcnDir);
-    mex(fullfile(sfcnDir, "arduinopio_hwint_avr.c"), "-outdir", sfcnDir);
+    sourceFiles = [
+        "arduinopio_extint.c"
+        "arduinopio_hwint_avr.c"
+        "arduinopio_digital_input_c.c"
+        "arduinopio_digital_output_c.c"
+        ];
+
+    for fileIndex = 1:numel(sourceFiles)
+        mex(fullfile(sfcnDir, sourceFiles(fileIndex)), "-outdir", sfcnDir);
+    end
 end

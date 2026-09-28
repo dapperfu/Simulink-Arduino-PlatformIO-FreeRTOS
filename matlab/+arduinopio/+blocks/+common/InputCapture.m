@@ -17,7 +17,8 @@ classdef (Sealed) InputCapture < matlab.System & coder.ExternalDependency
         function validatePropertiesImpl(obj)
             arduinopio.validatePin(obj.Pin, "capture");
             arduinopio.warnIfNotLibrary("arduinopio:Timer1Conflict", ...
-                "Input Capture on pin %d uses Timer1. Avoid PWM on pins 9 and 10 and Servo blocks.", obj.Pin);
+                "Input Capture on pin " + string(obj.Pin) + ...
+                " uses Timer1. Avoid PWM on pins 9 and 10 and Servo blocks.");
         end
 
         function setupImpl(obj)
@@ -63,8 +64,8 @@ classdef (Sealed) InputCapture < matlab.System & coder.ExternalDependency
             f2 = true;
         end
 
-        function icon = getIconImpl(~)
-            icon = "Input Capture";
+        function icon = getIconImpl(obj)
+            icon = arduinopio.iconWithPin("Input Capture", obj.Pin);
         end
 
         function sts = getSampleTimeImpl(obj)

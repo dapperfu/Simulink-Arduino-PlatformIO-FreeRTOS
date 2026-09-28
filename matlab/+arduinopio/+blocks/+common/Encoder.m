@@ -63,8 +63,8 @@ classdef (Sealed) Encoder < matlab.System & coder.ExternalDependency
             f = true;
         end
 
-        function icon = getIconImpl(~)
-            icon = "Encoder";
+        function icon = getIconImpl(obj)
+            icon = arduinopio.iconWithPin("Encoder", [obj.PinA, obj.PinB]);
         end
 
         function sts = getSampleTimeImpl(obj)

@@ -42,8 +42,8 @@ classdef (Sealed) StandardServoWrite < matlab.System & coder.ExternalDependency
             num = 0;
         end
 
-        function icon = getIconImpl(~)
-            icon = "Standard Servo Write";
+        function icon = getIconImpl(obj)
+            icon = arduinopio.iconWithPin("Standard Servo Write", obj.Pin);
         end
 
         function sts = getSampleTimeImpl(obj)

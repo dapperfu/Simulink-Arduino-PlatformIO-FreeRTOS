@@ -7,6 +7,7 @@ function info = nano33Ble()
     info.Mcu = "nRF52840";
     info.Architecture = "nrf52";
     info.Implemented = false;
+    info.HasInputPulldown = true;
     info.HasDac = true;
     info.HasBle = true;
     info.EepromSize = 0;

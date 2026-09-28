@@ -1,21 +1,16 @@
 %% arduinopio_analog_input.tlc
-%% Inline analog input for the Arduino PIO Embedded Coder target.
+%% Inline analogRead for the Arduino PIO Embedded Coder target.
 %implements "arduinopio_analog_input" "C"
 
 %function BlockTypeSetup(block, system) void
-  %<LibAddToCommonIncludes("arduinopio_adc.h")>
-%endfunction
-
-%function Start(block, system) Output
-  /* %<Type> Block: %<Name> */
-  {
-    arduinopioAnalogSetup((uint8_T)%<SFcnParamSettings.Pin>);
-  }
+  %<LibAddToCommonIncludes("arduinopio_arduino.h")>
 %endfunction
 
 %function Outputs(block, system) Output
   /* %<Type> Block: %<Name> */
   {
-    %<LibBlockOutputSignal(0, "", "", 0)> = arduinopioAnalogRead((uint8_T)%<SFcnParamSettings.Pin>);
+    uint16_T y;
+    y = (uint16_T)analogRead((uint8_T)%<block.ParamSettings.Pin>);
+    %<LibBlockOutputSignal(0, "", "", 0)> = y;
   }
 %endfunction

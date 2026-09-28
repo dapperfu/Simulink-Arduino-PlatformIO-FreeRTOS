@@ -32,7 +32,8 @@ classdef (Sealed) IoReference < matlab.System
                 "INT 2,3  UART 0/1"
                 "I2C A4/A5  SPI 10-13"
                 "EEPROM 1 KB"
-                "No DAC/BLE/WiFi/CAN"];
+                "MCP2515 CAN on SPI"
+                "No DAC/BLE/WiFi/native CAN"];
         end
     end
 
@@ -41,7 +42,7 @@ classdef (Sealed) IoReference < matlab.System
             header = matlab.system.display.Header( ...
                 "arduinopio.blocks.uno.IoReference", ...
                 Title="Uno I/O Reference", ...
-                Text="Use Common and Advanced AVR blocks. Classic Uno R3 has no board-unique peripherals.");
+                Text="Use Common and Advanced AVR blocks. CAN is MCP2515 over SPI, not a native CAN controller.");
         end
     end
 end

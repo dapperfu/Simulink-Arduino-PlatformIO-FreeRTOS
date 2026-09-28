@@ -50,8 +50,8 @@ classdef (Sealed) PwmAvr < matlab.System & coder.ExternalDependency
             num = 0;
         end
 
-        function icon = getIconImpl(~)
-            icon = "PWM AVR";
+        function icon = getIconImpl(obj)
+            icon = arduinopio.iconWithPin("PWM AVR", obj.Pin);
         end
 
         function sts = getSampleTimeImpl(obj)

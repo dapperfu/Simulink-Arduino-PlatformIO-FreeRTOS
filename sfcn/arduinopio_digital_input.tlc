@@ -1,21 +1,31 @@
 %% arduinopio_digital_input.tlc
-%% Inline digital input for the Arduino PIO Embedded Coder target.
+%% Inline pinMode / digitalRead for the Arduino PIO Embedded Coder target.
 %implements "arduinopio_digital_input" "C"
 
 %function BlockTypeSetup(block, system) void
-  %<LibAddToCommonIncludes("arduinopio_gpio.h")>
+  %<LibAddToCommonIncludes("arduinopio_arduino.h")>
 %endfunction
 
 %function Start(block, system) Output
   /* %<Type> Block: %<Name> */
   {
-    arduinopioDigitalInputSetup((uint8_T)%<SFcnParamSettings.Pin>, (uint8_T)%<SFcnParamSettings.Pullup>);
+    uint8_T pin = (uint8_T)%<block.ParamSettings.Pin>;
+    int pinPull = (int)%<block.ParamSettings.PinPull>;
+    if (pinPull == 2) {
+      pinMode(pin, INPUT_PULLDOWN);
+    } else if (pinPull == 1) {
+      pinMode(pin, INPUT_PULLUP);
+    } else {
+      pinMode(pin, INPUT);
+    }
   }
 %endfunction
 
 %function Outputs(block, system) Output
   /* %<Type> Block: %<Name> */
   {
-    %<LibBlockOutputSignal(0, "", "", 0)> = (boolean_T)(arduinopioDigitalRead((uint8_T)%<SFcnParamSettings.Pin>) != 0);
+    int y;
+    y = digitalRead((uint8_T)%<block.ParamSettings.Pin>);
+    %<LibBlockOutputSignal(0, "", "", 0)> = (boolean_T)(y != 0);
   }
 %endfunction

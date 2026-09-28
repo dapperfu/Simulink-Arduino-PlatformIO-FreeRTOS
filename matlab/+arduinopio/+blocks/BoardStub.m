@@ -3,7 +3,7 @@ classdef (Sealed) BoardStub < matlab.System
 
     properties (Nontunable)
         BoardName (1,1) string = "Later board"
-        ExtraBlocks (1,:) string = "Not implemented"
+        ExtraBlocks (1,1) string = "Not implemented"
     end
 
     methods
@@ -29,12 +29,14 @@ classdef (Sealed) BoardStub < matlab.System
         end
 
         function icon = getIconImpl(obj)
-            extra = obj.ExtraBlocks;
+            extra = split(obj.ExtraBlocks, ",");
+            extra = strtrim(extra);
+            extra = extra(strlength(extra) > 0);
             if isempty(extra)
                 extra = "Not implemented";
             end
             maxLines = min(6, numel(extra));
-            icon = [obj.BoardName; "Not implemented:"; extra(1:maxLines).'];
+            icon = [obj.BoardName; "Not implemented:"; extra(1:maxLines)];
         end
     end
 end

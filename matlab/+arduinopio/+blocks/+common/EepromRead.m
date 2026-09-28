@@ -16,13 +16,7 @@ classdef (Sealed) EepromRead < matlab.System & coder.ExternalDependency
 
     methods (Access = protected)
         function validatePropertiesImpl(obj)
-            info = arduinopio.boards.getBoard();
-            lastAddress = obj.StartAddress + obj.DataLength - 1;
-            if lastAddress >= info.EepromSize
-                error("arduinopio:EepromRange", ...
-                    "EEPROM read [%d:%d] exceeds %s size %d. Use a start address and length that fit.", ...
-                    obj.StartAddress, lastAddress, info.DisplayName, info.EepromSize);
-            end
+            arduinopio.validateEepromRange(obj.StartAddress, obj.DataLength);
         end
 
         function setupImpl(~)

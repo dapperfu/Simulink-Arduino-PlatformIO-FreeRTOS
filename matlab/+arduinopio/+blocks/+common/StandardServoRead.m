@@ -56,8 +56,8 @@ classdef (Sealed) StandardServoRead < matlab.System & coder.ExternalDependency
             f = true;
         end
 
-        function icon = getIconImpl(~)
-            icon = "Standard Servo Read";
+        function icon = getIconImpl(obj)
+            icon = arduinopio.iconWithPin("Standard Servo Read", obj.Pin);
         end
 
         function sts = getSampleTimeImpl(obj)

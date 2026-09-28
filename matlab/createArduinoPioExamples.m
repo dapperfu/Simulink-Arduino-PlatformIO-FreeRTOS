@@ -10,12 +10,14 @@ function createArduinoPioExamples()
     createBlinkExample(exampleDir);
     createAnalogPwmExample(exampleDir);
     createSerialExample(exampleDir);
+    createCanExample(exampleDir);
+    createMultirateExample(OpenModel=false);
 end
 
 function createBlinkExample(exampleDir)
     modelName = "uno_blink";
     modelPath = fullfile(exampleDir, modelName + ".slx");
-    resetModel(modelName, modelPath);
+    startExampleModel(modelName, modelPath, "0.1");
 
     add_block("simulink/Sources/Pulse Generator", modelName + "/Pulse", ...
         Position=[80, 80, 150, 120]);
@@ -28,7 +30,6 @@ function createBlinkExample(exampleDir)
     set_param(modelName + "/Digital Output", SampleTime="0.1");
 
     add_line(modelName, "Pulse/1", "Digital Output/1");
-    configureDiscreteSolver(modelName, 0.1);
     save_system(modelName, modelPath);
     close_system(modelName);
 end
@@ -36,7 +37,7 @@ end
 function createAnalogPwmExample(exampleDir)
     modelName = "uno_analog_pwm";
     modelPath = fullfile(exampleDir, modelName + ".slx");
-    resetModel(modelName, modelPath);
+    startExampleModel(modelName, modelPath, "0.05");
 
     add_block("simulink/User-Defined Functions/MATLAB System", modelName + "/Analog Input", ...
         Position=[80, 80, 200, 130]);
@@ -55,7 +56,6 @@ function createAnalogPwmExample(exampleDir)
 
     add_line(modelName, "Analog Input/1", "Scale/1");
     add_line(modelName, "Scale/1", "PWM/1");
-    configureDiscreteSolver(modelName, 0.05);
     save_system(modelName, modelPath);
     close_system(modelName);
 end
@@ -63,7 +63,7 @@ end
 function createSerialExample(exampleDir)
     modelName = "uno_serial";
     modelPath = fullfile(exampleDir, modelName + ".slx");
-    resetModel(modelName, modelPath);
+    startExampleModel(modelName, modelPath, "0.1");
 
     add_block("simulink/Sources/Constant", modelName + "/TxData", Position=[80, 80, 140, 120]);
     set_param(modelName + "/TxData", Value="uint8(65)", OutDataTypeStr="uint8");
@@ -89,9 +89,56 @@ function createSerialExample(exampleDir)
     add_line(modelName, "TxData/1", "Serial Transmit/1");
     add_line(modelName, "Serial Receive/1", "DataTerm/1");
     add_line(modelName, "Serial Receive/2", "StatusTerm/1");
-    configureDiscreteSolver(modelName, 0.1);
     save_system(modelName, modelPath);
     close_system(modelName);
+end
+
+function createCanExample(exampleDir)
+    modelName = "uno_can";
+    modelPath = fullfile(exampleDir, modelName + ".slx");
+    startExampleModel(modelName, modelPath, "0.05");
+
+    add_block("simulink/Sources/Constant", modelName + "/TxData", Position=[40, 80, 110, 120]);
+    set_param(modelName + "/TxData", Value="uint8(1:8)", OutDataTypeStr="uint8");
+
+    add_block("simulink/User-Defined Functions/MATLAB System", modelName + "/CAN Transmit", ...
+        Position=[160, 72, 300, 128]);
+    set_param(modelName + "/CAN Transmit", System="arduinopio.blocks.common.CanTransmit");
+    set_param(modelName + "/CAN Transmit", SimulateUsing="Interpreted execution");
+    set_param(modelName + "/CAN Transmit", ChipSelectPin="10");
+    set_param(modelName + "/CAN Transmit", OscillatorMHz="8");
+    set_param(modelName + "/CAN Transmit", BaudRateKbps="500");
+    set_param(modelName + "/CAN Transmit", MessageId="256");
+    set_param(modelName + "/CAN Transmit", OperatingMode="1");
+    set_param(modelName + "/CAN Transmit", SampleTime="0.05");
+
+    add_block("simulink/User-Defined Functions/MATLAB System", modelName + "/CAN Receive", ...
+        Position=[160, 180, 300, 270]);
+    set_param(modelName + "/CAN Receive", System="arduinopio.blocks.common.CanReceive");
+    set_param(modelName + "/CAN Receive", SimulateUsing="Interpreted execution");
+    set_param(modelName + "/CAN Receive", ChipSelectPin="10");
+    set_param(modelName + "/CAN Receive", OscillatorMHz="8");
+    set_param(modelName + "/CAN Receive", BaudRateKbps="500");
+    set_param(modelName + "/CAN Receive", OperatingMode="1");
+    set_param(modelName + "/CAN Receive", SampleTime="0.05");
+
+    add_block("simulink/Sinks/Terminator", modelName + "/IdTerm", Position=[360, 187, 380, 213]);
+    add_block("simulink/Sinks/Terminator", modelName + "/DataTerm", Position=[360, 217, 380, 243]);
+    add_block("simulink/Sinks/Terminator", modelName + "/LenTerm", Position=[360, 247, 380, 273]);
+    add_block("simulink/Sinks/Terminator", modelName + "/StatusTerm", Position=[360, 277, 380, 303]);
+
+    add_line(modelName, "TxData/1", "CAN Transmit/1");
+    add_line(modelName, "CAN Receive/1", "IdTerm/1");
+    add_line(modelName, "CAN Receive/2", "DataTerm/1");
+    add_line(modelName, "CAN Receive/3", "LenTerm/1");
+    add_line(modelName, "CAN Receive/4", "StatusTerm/1");
+    save_system(modelName, modelPath);
+    close_system(modelName);
+end
+
+function startExampleModel(modelName, modelPath, sampleTime)
+    resetModel(modelName, modelPath);
+    piofrtos.configureModel(modelName, FixedStep=sampleTime);
 end
 
 function resetModel(modelName, modelPath)
@@ -103,8 +150,4 @@ function resetModel(modelName, modelPath)
     end
     new_system(modelName);
     load_system(modelName);
-end
-
-function configureDiscreteSolver(modelName, sampleTime)
-    set_param(modelName, SolverType="Fixed-step", Solver="FixedStepDiscrete", FixedStep=num2str(sampleTime));
 end

@@ -1,5 +1,4 @@
 #include "arduinopio_servo.h"
-#include "arduinopio_lock.h"
 
 #include <Arduino.h>
 #include <Servo.h>
@@ -34,21 +33,17 @@ extern "C" {
 
 void arduinopioServoSetup(uint8_t pin)
 {
-    arduinopioLock();
     (void)servoForPin(pin);
-    arduinopioUnlock();
 }
 
 void arduinopioServoWriteAngle(uint8_t pin, uint8_t angleDeg)
 {
     Servo *servo;
 
-    arduinopioLock();
     servo = servoForPin(pin);
     if (servo != NULL) {
         servo->write(angleDeg);
     }
-    arduinopioUnlock();
 }
 
 void arduinopioServoWriteSpeed(uint8_t pin, int8_t speed)
@@ -70,12 +65,10 @@ uint8_t arduinopioServoReadAngle(uint8_t pin)
     Servo *servo;
     uint8_t angle = 0;
 
-    arduinopioLock();
     servo = servoForPin(pin);
     if (servo != NULL) {
         angle = (uint8_t)servo->read();
     }
-    arduinopioUnlock();
     return angle;
 }
 

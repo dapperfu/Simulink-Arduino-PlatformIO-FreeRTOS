@@ -21,15 +21,17 @@ classdef (Sealed) Pwm < matlab.System & coder.ExternalDependency
 
         function setupImpl(obj)
             if coder.target("Rtw")
-                coder.cinclude("arduinopio_pwm.h");
-                coder.ceval("arduinopioPwmSetup", uint8(obj.Pin));
+                coder.cinclude("arduinopio_arduino.h");
+                coder.ceval("pinMode", uint8(obj.Pin), coder.opaque("uint8_t", "OUTPUT"));
+                coder.ceval("analogWrite", uint8(obj.Pin), int32(0));
             end
         end
 
         function stepImpl(obj, u)
             if coder.target("Rtw")
-                duty = uint8(min(max(double(u), 0), 255));
-                coder.ceval("arduinopioPwmWrite", uint8(obj.Pin), duty);
+                duty = int32(min(max(double(u), 0), 255));
+                coder.cinclude("arduinopio_arduino.h");
+                coder.ceval("analogWrite", uint8(obj.Pin), duty);
             end
         end
 
@@ -45,8 +47,8 @@ classdef (Sealed) Pwm < matlab.System & coder.ExternalDependency
             flag = false;
         end
 
-        function icon = getIconImpl(~)
-            icon = "PWM";
+        function icon = getIconImpl(obj)
+            icon = arduinopio.iconWithPin("PWM", obj.Pin);
         end
 
         function sts = getSampleTimeImpl(obj)
@@ -68,7 +70,7 @@ classdef (Sealed) Pwm < matlab.System & coder.ExternalDependency
         end
 
         function updateBuildInfo(buildInfo, context)
-            arduinopio.updateDriverBuildInfo(buildInfo, context, "arduinopio_pwm.cpp");
+            arduinopio.updateDriverBuildInfo(buildInfo, context);
         end
     end
 

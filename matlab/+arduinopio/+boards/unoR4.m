@@ -7,6 +7,7 @@ function info = unoR4()
     info.Mcu = "RA4M1";
     info.Architecture = "renesas";
     info.Implemented = false;
+    info.HasInputPulldown = true;
     info.HasDac = true;
     info.HasOnboardCan = true;
     info.HasLedMatrix = true;

@@ -3,6 +3,7 @@ function names = listBoards()
 
     names = [ ...
         "uno"
+        "nano"
         "mega2560"
         "due"
         "mkrWifi1010"

@@ -1,15 +1,16 @@
 %% arduinopio_analog_output.tlc
-%% Inline analogWrite output for the Arduino PIO Embedded Coder target.
+%% Inline pinMode / analogWrite for the Arduino PIO Embedded Coder target.
 %implements "arduinopio_analog_output" "C"
 
 %function BlockTypeSetup(block, system) void
-  %<LibAddToCommonIncludes("arduinopio_adc.h")>
+  %<LibAddToCommonIncludes("arduinopio_arduino.h")>
 %endfunction
 
 %function Start(block, system) Output
   /* %<Type> Block: %<Name> */
   {
-    arduinopioAnalogWriteSetup((uint8_T)%<SFcnParamSettings.Pin>);
+    pinMode((uint8_T)%<block.ParamSettings.Pin>, OUTPUT);
+    analogWrite((uint8_T)%<block.ParamSettings.Pin>, 0);
   }
 %endfunction
 
@@ -17,14 +18,14 @@
   /* %<Type> Block: %<Name> */
   {
     real_T u = %<LibBlockInputSignal(0, "", "", 0)>;
-    uint8_T duty;
+    int duty;
     if (u < 0.0) {
-      duty = 0U;
+      duty = 0;
     } else if (u > 255.0) {
-      duty = 255U;
+      duty = 255;
     } else {
-      duty = (uint8_T)(u + 0.5);
+      duty = (int)(u + 0.5);
     }
-    arduinopioAnalogWrite((uint8_T)%<SFcnParamSettings.Pin>, duty);
+    analogWrite((uint8_T)%<block.ParamSettings.Pin>, duty);
   }
 %endfunction

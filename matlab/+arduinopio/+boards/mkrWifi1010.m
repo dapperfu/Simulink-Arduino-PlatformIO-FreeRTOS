@@ -7,6 +7,7 @@ function info = mkrWifi1010()
     info.Mcu = "SAMD21";
     info.Architecture = "samd";
     info.Implemented = false;
+    info.HasInputPulldown = true;
     info.HasDac = true;
     info.HasWifi = true;
     info.HasBle = true;

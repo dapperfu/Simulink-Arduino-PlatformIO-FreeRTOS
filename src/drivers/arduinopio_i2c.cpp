@@ -1,5 +1,4 @@
 #include "arduinopio_i2c.h"
-#include "arduinopio_lock.h"
 
 #include <Arduino.h>
 #include <Wire.h>
@@ -8,9 +7,7 @@ extern "C" {
 
 void arduinopioI2cSetup(void)
 {
-    arduinopioLock();
     Wire.begin();
-    arduinopioUnlock();
 }
 
 void arduinopioI2cWrite(uint8_t address, uint8_t hasRegister, uint8_t registerAddress,
@@ -18,7 +15,6 @@ void arduinopioI2cWrite(uint8_t address, uint8_t hasRegister, uint8_t registerAd
 {
     uint8_t i;
 
-    arduinopioLock();
     Wire.beginTransmission(address);
     if (hasRegister != 0) {
         Wire.write(registerAddress);
@@ -27,7 +23,6 @@ void arduinopioI2cWrite(uint8_t address, uint8_t hasRegister, uint8_t registerAd
         Wire.write(data[i]);
     }
     Wire.endTransmission();
-    arduinopioUnlock();
 }
 
 uint8_t arduinopioI2cRead(uint8_t address, uint8_t hasRegister, uint8_t registerAddress,
@@ -36,7 +31,6 @@ uint8_t arduinopioI2cRead(uint8_t address, uint8_t hasRegister, uint8_t register
     uint8_t count = 0;
     uint8_t i;
 
-    arduinopioLock();
     if (hasRegister != 0) {
         Wire.beginTransmission(address);
         Wire.write(registerAddress);
@@ -46,7 +40,6 @@ uint8_t arduinopioI2cRead(uint8_t address, uint8_t hasRegister, uint8_t register
     for (i = 0; (i < count) && (i < length); ++i) {
         data[i] = (uint8_t)Wire.read();
     }
-    arduinopioUnlock();
     return count;
 }
 

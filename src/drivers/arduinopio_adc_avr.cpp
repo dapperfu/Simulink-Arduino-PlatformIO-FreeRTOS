@@ -1,5 +1,4 @@
 #include "arduinopio_adc_avr.h"
-#include "arduinopio_lock.h"
 
 #include <Arduino.h>
 
@@ -21,7 +20,6 @@ extern "C" {
 
 void arduinopioAdcAvrSetup(uint8_t pin, uint8_t referenceSelect, uint8_t prescalerSelect)
 {
-    arduinopioLock();
 #if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328__)
     gAdcReference = referenceSelect & 0x03;
     gAdcPrescaler = prescalerSelect & 0x07;
@@ -32,14 +30,12 @@ void arduinopioAdcAvrSetup(uint8_t pin, uint8_t referenceSelect, uint8_t prescal
     (void)referenceSelect;
     (void)prescalerSelect;
 #endif
-    arduinopioUnlock();
 }
 
 uint16_t arduinopioAdcAvrRead(uint8_t pin)
 {
     uint16_t value = 0;
 
-    arduinopioLock();
 #if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328__)
     applyAdcSettings(pin);
     ADCSRA |= (1 << ADSC);
@@ -49,7 +45,6 @@ uint16_t arduinopioAdcAvrRead(uint8_t pin)
 #else
     value = (uint16_t)analogRead(pin);
 #endif
-    arduinopioUnlock();
     return value;
 }
 

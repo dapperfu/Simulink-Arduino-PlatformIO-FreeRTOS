@@ -1,0 +1,22 @@
+%% arduinopio_digital_output_c.tlc
+%% Inline pinMode / digitalWrite for the Level-2 C Digital Output S-function.
+%implements "arduinopio_digital_output_c" "C"
+
+%function BlockTypeSetup(block, system) void
+  %<LibAddToCommonIncludes("arduinopio_arduino.h")>
+%endfunction
+
+%function Start(block, system) Output
+  /* %<Type> Block: %<Name> */
+  {
+    pinMode((uint8_T)%<SFcnParamSettings.Pin>, OUTPUT);
+  }
+%endfunction
+
+%function Outputs(block, system) Output
+  /* %<Type> Block: %<Name> */
+  {
+    real_T u = %<LibBlockInputSignal(0, "", "", 0)>;
+    digitalWrite((uint8_T)%<SFcnParamSettings.Pin>, (u != 0.0) ? HIGH : LOW);
+  }
+%endfunction

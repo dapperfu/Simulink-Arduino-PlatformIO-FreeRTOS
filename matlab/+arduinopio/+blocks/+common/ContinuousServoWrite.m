@@ -42,8 +42,8 @@ classdef (Sealed) ContinuousServoWrite < matlab.System & coder.ExternalDependenc
             num = 0;
         end
 
-        function icon = getIconImpl(~)
-            icon = "Continuous Servo Write";
+        function icon = getIconImpl(obj)
+            icon = arduinopio.iconWithPin("Continuous Servo Write", obj.Pin);
         end
 
         function sts = getSampleTimeImpl(obj)

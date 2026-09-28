@@ -7,6 +7,7 @@ function info = esp32Wroom()
     info.Mcu = "ESP32-D0WDQ6";
     info.Architecture = "xtensa";
     info.Implemented = false;
+    info.HasInputPulldown = true;
     info.HasDac = true;
     info.HasWifi = true;
     info.HasBle = true;

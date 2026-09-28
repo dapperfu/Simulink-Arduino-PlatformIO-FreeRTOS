@@ -63,8 +63,8 @@ classdef (Sealed) SpiWriteRead < matlab.System & coder.ExternalDependency
             f = propagatedInputFixedSize(obj, 1);
         end
 
-        function icon = getIconImpl(~)
-            icon = "SPI WriteRead";
+        function icon = getIconImpl(obj)
+            icon = arduinopio.iconWithPin("SPI WriteRead", obj.ChipSelectPin, Label="CS");
         end
 
         function sts = getSampleTimeImpl(obj)

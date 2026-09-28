@@ -5,8 +5,14 @@ classdef (Sealed) DigitalInput < matlab.System & coder.ExternalDependency
 
     properties (Nontunable)
         Pin (1,1) {mustBeInteger, mustBeNonnegative} = 2
-        EnablePullup (1,1) logical = false
+        % Internal resistor
+        PinPull = 'None'
         SampleTime (1,1) double = -1
+        SimValue (1,1) double = 0
+    end
+
+    properties (Constant, Hidden)
+        PinPullSet = matlab.system.StringSet({'None', 'Pull-up', 'Pull-down'})
     end
 
     methods
@@ -19,20 +25,29 @@ classdef (Sealed) DigitalInput < matlab.System & coder.ExternalDependency
     methods (Access = protected)
         function validatePropertiesImpl(obj)
             arduinopio.validatePin(obj.Pin, "digital");
+            arduinopio.validatePinPull(obj.PinPull);
         end
 
         function setupImpl(obj)
             if coder.target("Rtw")
-                coder.cinclude("arduinopio_gpio.h");
-                coder.ceval("arduinopioDigitalInputSetup", uint8(obj.Pin), uint8(obj.EnablePullup));
+                coder.cinclude("arduinopio_arduino.h");
+                pullName = char(obj.PinPull);
+                if strcmp(pullName, "Pull-up")
+                    coder.ceval("pinMode", uint8(obj.Pin), coder.opaque("uint8_t", "INPUT_PULLUP"));
+                elseif strcmp(pullName, "Pull-down")
+                    coder.ceval("pinMode", uint8(obj.Pin), coder.opaque("uint8_t", "INPUT_PULLDOWN"));
+                else
+                    coder.ceval("pinMode", uint8(obj.Pin), coder.opaque("uint8_t", "INPUT"));
+                end
             end
         end
 
         function y = stepImpl(obj)
-            y = false;
+            y = logical(obj.SimValue ~= 0);
             if coder.target("Rtw")
-                value = uint8(0);
-                value = coder.ceval("arduinopioDigitalRead", uint8(obj.Pin));
+                value = int32(0);
+                coder.cinclude("arduinopio_arduino.h");
+                value = coder.ceval("digitalRead", uint8(obj.Pin));
                 y = (value ~= 0);
             end
         end
@@ -61,8 +76,8 @@ classdef (Sealed) DigitalInput < matlab.System & coder.ExternalDependency
             out = true;
         end
 
-        function icon = getIconImpl(~)
-            icon = "Digital Input";
+        function icon = getIconImpl(obj)
+            icon = arduinopio.iconWithPin("Digital Input", obj.Pin);
         end
 
         function sts = getSampleTimeImpl(obj)
@@ -84,7 +99,7 @@ classdef (Sealed) DigitalInput < matlab.System & coder.ExternalDependency
         end
 
         function updateBuildInfo(buildInfo, context)
-            arduinopio.updateDriverBuildInfo(buildInfo, context, "arduinopio_gpio.cpp");
+            arduinopio.updateDriverBuildInfo(buildInfo, context);
         end
     end
 
@@ -93,7 +108,7 @@ classdef (Sealed) DigitalInput < matlab.System & coder.ExternalDependency
             header = matlab.system.display.Header( ...
                 "arduinopio.blocks.common.DigitalInput", ...
                 Title="Digital Input", ...
-                Text="Read a digital pin. Uno pins 0-13 and A0-A5 (14-19) are valid.");
+                Text="MATLAB System object path: setupImpl/stepImpl emit coder.ceval calls. Internal resistor: None, Pull-up, or Pull-down.");
         end
     end
 end

@@ -7,6 +7,7 @@ function info = due()
     info.Mcu = "AT91SAM3X8E";
     info.Architecture = "sam";
     info.Implemented = false;
+    info.HasInputPulldown = true;
     info.HasDac = true;
     info.UartCount = 4;
     info.EepromSize = 0;

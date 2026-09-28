@@ -5,7 +5,7 @@ function updateDriverBuildInfo(buildInfo, context, sourceFiles, libDeps)
     arguments
         buildInfo
         context
-        sourceFiles (1,:) string
+        sourceFiles (1,:) string = string.empty(1, 0)
         libDeps (1,:) string = string.empty(1, 0)
     end
 
@@ -16,7 +16,6 @@ function updateDriverBuildInfo(buildInfo, context, sourceFiles, libDeps)
     rootDir = arduinopio.getRootFolder();
     srcDir = fullfile(rootDir, "src", "drivers");
     addIncludePaths(buildInfo, srcDir);
-    addSourceFiles(buildInfo, "arduinopio_lock.cpp", srcDir);
 
     for i = 1:numel(sourceFiles)
         addSourceFiles(buildInfo, sourceFiles(i), srcDir);

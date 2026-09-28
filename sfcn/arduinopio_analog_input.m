@@ -1,5 +1,5 @@
 function arduinopio_analog_input(block)
-%arduinopio_analog_input Level-2 MATLAB S-function for an analog input pin.
+%arduinopio_analog_input Level-2 MATLAB S-function for analogRead.
     setup(block);
 end
 
