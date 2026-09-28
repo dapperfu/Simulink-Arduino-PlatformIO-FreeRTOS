@@ -1,0 +1,13 @@
+slprj/
+/*_piofrtos_rtw/
+*_grt_rtw/
+**/.pio/
+**/tmwinternal/
+*.slxc
+*.autosave
+*.asv
+examples/*.slx
+*.mexw64
+*.mexw32
+*.mexa64
+*.mexmaci64

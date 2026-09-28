@@ -1,0 +1,18 @@
+%% arduinopio_extint.tlc
+%% Inline the external-interrupt S-function for Embedded Coder.
+%implements "arduinopio_extint" "C"
+
+%function BlockTypeSetup(block, system) void
+  %<LibAddToCommonIncludes("arduinopio_extint.h")>
+%endfunction
+
+%function Start(block, system) Output
+  %% Register the pin ISR. The function-call body runs from the sample-rate task.
+  arduinopioExtIntSetup((uint8_T)%<SFcnParamSettings.Pin>, (uint8_T)%<SFcnParamSettings.Mode>, (uint8_T)%<SFcnParamSettings.Pullup>);
+%endfunction
+
+%function Outputs(block, system) Output
+  if (arduinopioExtIntTake((uint8_T)%<SFcnParamSettings.Pin>) != 0) {
+    %<LibBlockExecuteFcnCall(block, 0)>
+  }
+%endfunction

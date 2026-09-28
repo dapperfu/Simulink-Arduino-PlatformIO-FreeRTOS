@@ -1,0 +1,31 @@
+%% arduinopio_serial_transmit.tlc
+%% Inline UART transmit for the Arduino PIO Embedded Coder target.
+%implements "arduinopio_serial_transmit" "C"
+
+%function BlockTypeSetup(block, system) void
+  %<LibAddToCommonIncludes("arduinopio_uart.h")>
+%endfunction
+
+%function Start(block, system) Output
+  /* %<Type> Block: %<Name> */
+  {
+    arduinopioUartSetup((uint8_T)%<block.ParamSettings.Port>, (uint32_T)%<block.ParamSettings.BaudRate>);
+  }
+%endfunction
+
+%function Outputs(block, system) Output
+  /* %<Type> Block: %<Name> */
+  {
+    const uint8_T *u = (const uint8_T *)%<LibBlockInputSignalAddr(0, "", "", 0)>;
+    int_T width = %<LibBlockInputSignalWidth(0)>;
+    uint8_T length;
+    if (width < 0) {
+      length = 0U;
+    } else if (width > 255) {
+      length = 255U;
+    } else {
+      length = (uint8_T)width;
+    }
+    arduinopioUartWrite((uint8_T)%<block.ParamSettings.Port>, u, length);
+  }
+%endfunction
