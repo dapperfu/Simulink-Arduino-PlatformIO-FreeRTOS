@@ -1,12 +1,14 @@
 classdef (Sealed) CanReceive < matlab.System & coder.ExternalDependency
     %CANRECEIVE - Read a CAN 2.0 frame from an MCP2515 controller on SPI.
     %   Sealed matlab.System and coder.ExternalDependency for MCP2515 receive codegen. setupImpl
-    %   includes arduinopio_can.h, calls arduinopioCanSetup, and optionally arduinopioCanSetFilter
-    %   when UseFilter is true. stepImpl polls via arduinopioCanReceive. SampleTime -1 inherits;
-    %   otherwise discrete. Host simulation returns zeroed outputs and Status false without
-    %   touching hardware. Nontunable ChipSelectPin default 10, OscillatorMHz 8, BaudRateKbps
-    %   500, OperatingMode 0, UseFilter false, FilterId 0, FilterMask 2047, FilterExtended false,
-    %   SampleTime -1.
+    %   includes arduinopio_can.h, calls arduinopioCanSetup, arduinopioCanSetReceiveTimeout, and
+    %   optionally arduinopioCanSetFilter when UseFilter is true. The C driver runs a FreeRTOS
+    %   RX task (1 ms) that drains MCP2515 into a queue under a mutex; stepImpl takes from that
+    %   queue via arduinopioCanReceive with ReceiveTimeoutMs (default 10). SampleTime -1
+    %   inherits; otherwise discrete. Host simulation returns zeroed outputs and Status false
+    %   without touching hardware. Nontunable ChipSelectPin default 10, OscillatorMHz 8,
+    %   BaudRateKbps 500, OperatingMode 0, UseFilter false, FilterId 0, FilterMask 2047,
+    %   FilterExtended false, ReceiveTimeoutMs 10, SampleTime -1.
     %
     %   Syntax:
     %       obj = arduinopio.blocks.common.CanReceive
@@ -22,6 +24,7 @@ classdef (Sealed) CanReceive < matlab.System & coder.ExternalDependency
     %       FilterId - (1,1) nonnegative integer, default 0; validated by validateCanIdentifier.
     %       FilterMask - (1,1) nonnegative integer, default 2047; validated by validateCanIdentifier.
     %       FilterExtended - (1,1) logical, default false; selects standard vs extended ID rules.
+    %       ReceiveTimeoutMs - (1,1) nonnegative integer, default 10; FreeRTOS queue wait in ms.
     %       SampleTime - (1,1) double, default -1 (inherited) or positive discrete period.
     %
     %   Outputs:
@@ -38,7 +41,7 @@ classdef (Sealed) CanReceive < matlab.System & coder.ExternalDependency
     %   See also: CANTRANSMIT, VALIDATEPIN, VALIDATECANIDENTIFIER, UPDATEDRIVERBUILDINFO
 
     %   Author: Frey, Jed
-    %   28-Sep-2026; Last revision: 28-Sep-2026
+    %   28-Sep-2026; Last revision: 07-Oct-2026
 
     properties (Nontunable)
         ChipSelectPin (1,1) {mustBeInteger, mustBeNonnegative} = 10
@@ -49,6 +52,7 @@ classdef (Sealed) CanReceive < matlab.System & coder.ExternalDependency
         FilterId (1,1) {mustBeInteger, mustBeNonnegative} = 0
         FilterMask (1,1) {mustBeInteger, mustBeNonnegative} = 2047
         FilterExtended (1,1) logical = false
+        ReceiveTimeoutMs (1,1) {mustBeInteger, mustBeNonnegative} = 10
         SampleTime (1,1) double = -1
     end
 
@@ -63,7 +67,7 @@ classdef (Sealed) CanReceive < matlab.System & coder.ExternalDependency
         %   Inputs:
         %       varargin - Name-Value pairs for nontunable properties (ChipSelectPin,
         %           OscillatorMHz, BaudRateKbps, OperatingMode, UseFilter, FilterId, FilterMask,
-        %           FilterExtended, SampleTime).
+        %           FilterExtended, ReceiveTimeoutMs, SampleTime).
         %
         %   Outputs:
         %       obj - CanReceive system object.
@@ -102,10 +106,11 @@ classdef (Sealed) CanReceive < matlab.System & coder.ExternalDependency
         end
 
         function setupImpl(obj)
-        %SETUPIMPL - Initialize MCP2515 and optional RX filter when generating code.
+        %SETUPIMPL - Initialize MCP2515, receive timeout, and optional RX filter for codegen.
         %   Under coder.target("Rtw"), includes arduinopio_can.h, calls arduinopioCanSetup with
-        %   CS, baud, oscillator MHz, and OperatingMode; if UseFilter, calls
-        %   arduinopioCanSetFilter. Host simulation is a no-op.
+        %   CS, baud, oscillator MHz, and OperatingMode; sets ReceiveTimeoutMs via
+        %   arduinopioCanSetReceiveTimeout; if UseFilter, calls arduinopioCanSetFilter. Host
+        %   simulation is a no-op.
         %
         %   Syntax:
         %       setupImpl(obj)
@@ -124,6 +129,7 @@ classdef (Sealed) CanReceive < matlab.System & coder.ExternalDependency
                 coder.cinclude("arduinopio_can.h");
                 coder.ceval("arduinopioCanSetup", uint8(obj.ChipSelectPin), uint16(obj.BaudRateKbps), ...
                     uint8(obj.OscillatorMHz), uint8(obj.OperatingMode));
+                coder.ceval("arduinopioCanSetReceiveTimeout", uint16(obj.ReceiveTimeoutMs));
                 if obj.UseFilter
                     coder.ceval("arduinopioCanSetFilter", uint8(obj.FilterExtended), ...
                         uint32(obj.FilterId), uint32(obj.FilterMask));
@@ -132,10 +138,11 @@ classdef (Sealed) CanReceive < matlab.System & coder.ExternalDependency
         end
 
         function [identifier, data, length, status] = stepImpl(~)
-        %STEPIMPL - Poll MCP2515 for a frame via arduinopioCanReceive under RTW.
+        %STEPIMPL - Take a queued MCP2515 frame via arduinopioCanReceive under RTW.
         %   Defaults: identifier uint32(0), data zeros(8,1,"uint8"), length uint8(0), status
         %   false. Under RTW, ceval fills identifier/data/length via wref; status is true when
-        %   gotFrame ~= 0. Host leaves defaults and does not access hardware.
+        %   gotFrame ~= 0. The driver waits up to ReceiveTimeoutMs on the FreeRTOS RX queue.
+        %   Host leaves defaults and does not access hardware.
         %
         %   Syntax:
         %       [identifier, data, length, status] = stepImpl(~)
@@ -403,8 +410,9 @@ classdef (Sealed) CanReceive < matlab.System & coder.ExternalDependency
         end
 
         function updateBuildInfo(buildInfo, context)
-        %UPDATEBUILDINFO - Add CAN driver source and MCP2515 library dependency.
-        %   Calls updateDriverBuildInfo(buildInfo, context, "arduinopio_can.cpp", "MCP2515").
+        %UPDATEBUILDINFO - Add CAN driver source and autowp MCP2515 library dependency.
+        %   Calls updateDriverBuildInfo(buildInfo, context, "arduinopio_can.cpp", "MCP2515"),
+        %   which maps to PlatformIO lib_deps entry autowp/autowp-mcp2515.
         %
         %   Syntax:
         %       updateBuildInfo(buildInfo, context)
@@ -446,7 +454,7 @@ classdef (Sealed) CanReceive < matlab.System & coder.ExternalDependency
             header = matlab.system.display.Header( ...
                 "arduinopio.blocks.common.CanReceive", ...
                 Title="CAN Receive", ...
-                Text="Polls MCP2515 over SPI each sample. Status is true when a new frame is read. UseFilter programs MASK/RXF when selected.");
+                Text="FreeRTOS RX task drains MCP2515 into a queue (mutex-protected SPI). Status is true when a frame is taken within ReceiveTimeoutMs (default 10). UseFilter programs MASK/RXF when selected.");
         end
     end
 end

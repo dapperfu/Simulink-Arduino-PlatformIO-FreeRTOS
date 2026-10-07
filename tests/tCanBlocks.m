@@ -141,6 +141,27 @@ classdef tCanBlocks < matlab.unittest.TestCase
             sim(modelName);
         end
 
+        function receiveTimeoutDefaultsToTenMs(testCase)
+        %RECEIVETIMEOUTDEFAULTSTOTENMS - CanReceive ReceiveTimeoutMs defaults to 10.
+        %   Constructs CanReceive and verifies the nontunable receive queue wait is 10 ms.
+        %
+        %   Syntax:
+        %       receiveTimeoutDefaultsToTenMs(testCase)
+        %
+        %   Inputs:
+        %       testCase - matlab.unittest.TestCase instance supplied by the runner.
+        %
+        %   Outputs:
+        %       none
+        %
+        %   Example:
+        %       runtests("tCanBlocks", "ProcedureName", "receiveTimeoutDefaultsToTenMs");
+        %
+        %   See also: TCANBLOCKS, ARDUINOPIO.BLOCKS.COMMON.CANRECEIVE
+            obj = arduinopio.blocks.common.CanReceive;
+            testCase.verifyEqual(obj.ReceiveTimeoutMs, 10);
+        end
+
         function knownLibDepsIncludesMcp2515(testCase)
         %KNOWNLIBDEPSINCLUDESMCP2515 - knownLibDeps lists MCP2515 define and library.
         %   Asserts ARDUINOPIO_NEED_MCP2515 appears among Define fields and
