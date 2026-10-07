@@ -1,9 +1,9 @@
 function targets = listKnownTargets()
 %LISTKNOWNTARGETS - Return PlatformIO targets known to work with this STF.
 %   Defines the curated board list for the piofrtos Arduino FreeRTOS Simulink
-%   target. Currently returns Arduino Uno (atmelavr/uno) and Arduino Nano
-%   (atmelavr/nanoatmega328), both with framework arduino, ExtraLibraries
-%   feilipu/FreeRTOS, and TaskStackWords "192". Consumed by getOptionTable,
+%   target. AVR entries use feilipu/FreeRTOS. ESP32, Due, MKR, Uno R4, and
+%   Nano 33 BLE are included so the dialog can fill platform and framework.
+%   Non-AVR ExtraLibraries stay empty. Consumed by getOptionTable,
 %   resolveKnownTarget, and related UI sync helpers.
 %
 %   Syntax:
@@ -31,14 +31,21 @@ function targets = listKnownTargets()
 
 %------------- BEGIN CODE --------------
     targets = [ ...
-        knownTarget("Arduino Uno", "atmelavr", "uno", "arduino")
-        knownTarget("Arduino Nano", "atmelavr", "nanoatmega328", "arduino")];
+        knownTarget("Arduino Uno", "atmelavr", "uno", "arduino", "feilipu/FreeRTOS", "192")
+        knownTarget("Arduino Nano", "atmelavr", "nanoatmega328", "arduino", "feilipu/FreeRTOS", "192")
+        knownTarget("Arduino Mega 2560", "atmelavr", "megaatmega2560", "arduino", "feilipu/FreeRTOS", "256")
+        knownTarget("Arduino Due", "atmelsam", "due", "arduino", "", "512")
+        knownTarget("Arduino MKR WiFi 1010", "atmelsam", "mkrwifi1010", "arduino", "", "512")
+        knownTarget("ESP32-WROOM", "espressif32", "esp32dev", "arduino", "", "4096")
+        knownTarget("Arduino Uno R4 WiFi", "renesas-ra", "uno_r4_wifi", "arduino", "", "1024")
+        knownTarget("Arduino Nano 33 BLE", "nordicnrf52", "nano33ble", "arduino", "", "1024")];
 end
 
-function target = knownTarget(displayName, platform, board, framework)
-%KNOWNTARGET - Build one known-good PlatformIO board struct for piofrtos.
-%   Local constructor used by listKnownTargets. Sets ExtraLibraries to
-%   "feilipu/FreeRTOS" and TaskStackWords to "192" for AVR FreeRTOS builds.
+function target = knownTarget(displayName, platform, board, framework, extraLibraries, taskStackWords)
+%KNOWNTARGET - Build one known PlatformIO board struct for piofrtos.
+%   Local constructor used by listKnownTargets. extraLibraries may be empty
+%   when the core already provides the scheduler. taskStackWords is the
+%   xTaskCreate stack depth stored on the target.
 %
 %   Syntax:
 %       target = knownTarget(displayName, platform, board, framework)
@@ -54,7 +61,8 @@ function target = knownTarget(displayName, platform, board, framework)
 %           ExtraLibraries, and TaskStackWords fields as strings.
 %
 %   Example:
-%       t = knownTarget("Arduino Uno", "atmelavr", "uno", "arduino");
+%       t = knownTarget("Arduino Uno", "atmelavr", "uno", "arduino", ...
+%           "feilipu/FreeRTOS", "192");
 %
 %   See also: LISTKNOWNTARGETS
     target = struct( ...
@@ -62,6 +70,6 @@ function target = knownTarget(displayName, platform, board, framework)
         "Platform", string(platform), ...
         "Board", string(board), ...
         "Framework", string(framework), ...
-        "ExtraLibraries", "feilipu/FreeRTOS", ...
-        "TaskStackWords", "192");
+        "ExtraLibraries", string(extraLibraries), ...
+        "TaskStackWords", string(taskStackWords));
 end

@@ -74,10 +74,12 @@ classdef tKnownTargets < matlab.unittest.TestCase
         %   See also: TKNOWNTARGETS, PIOFRTOS.LISTKNOWNTARGETS
             targets = piofrtos.listKnownTargets();
             displayNames = [targets.DisplayName];
-            testCase.verifyEqual(displayNames, ["Arduino Uno", "Arduino Nano"]);
-            testCase.verifyTrue(all([targets.Platform] == "atmelavr"));
+            testCase.verifyEqual(displayNames(1:2), ["Arduino Uno", "Arduino Nano"]);
+            testCase.verifyEqual([targets(1:2).Platform], ["atmelavr", "atmelavr"]);
             testCase.verifyTrue(all([targets.Framework] == "arduino"));
-            testCase.verifyEqual([targets.Board], ["uno", "nanoatmega328"]);
+            testCase.verifyEqual([targets(1:2).Board], ["uno", "nanoatmega328"]);
+            testCase.verifyTrue(any(displayNames == "Arduino Mega 2560"));
+            testCase.verifyTrue(any(displayNames == "ESP32-WROOM"));
         end
 
         function resolvesDisplayNameAndBoardId(testCase)
@@ -108,9 +110,13 @@ classdef tKnownTargets < matlab.unittest.TestCase
             testCase.verifyTrue(nanoKnown);
             testCase.verifyEqual(nanoTarget.DisplayName, "Arduino Nano");
 
-            [unknownTarget, unknownKnown] = piofrtos.resolveKnownTarget("esp32dev");
+            [espTarget, espKnown] = piofrtos.resolveKnownTarget("esp32dev");
+            testCase.verifyTrue(espKnown);
+            testCase.verifyEqual(espTarget.DisplayName, "ESP32-WROOM");
+
+            [unknownTarget, unknownKnown] = piofrtos.resolveKnownTarget("not-a-board");
             testCase.verifyFalse(unknownKnown);
-            testCase.verifyEqual(unknownTarget.Board, "esp32dev");
+            testCase.verifyEqual(unknownTarget.Board, "not-a-board");
         end
 
         function nanoBoardMapIncludesExtraAnalogPins(testCase)
