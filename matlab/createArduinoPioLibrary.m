@@ -6,7 +6,7 @@ function createArduinoPioLibrary()
 %   Due, MKR WiFi 1010, ESP32-WROOM, Uno R4, Nano 33 BLE, and Digital IO Methods.
 %   Common receives digital/analog/serial S-function masks, MATLAB System blocks
 %   for PWM, I2C, SPI, servos, encoder, capture, EEPROM, and CAN, plus interrupt
-%   subsystems. Board folders get BoardStub System objects. Saves and closes the
+%   subsystems. Board folders get masked MATLAB System drivers. Saves and closes the
 %   library so slblocks can register it in the Library Browser.
 %
 %   Syntax:
@@ -28,7 +28,7 @@ function createArduinoPioLibrary()
 %       addDigitalIoMethodLibrary, addSystemDigitalIoBlock, addCSfunctionBlock,
 %       addCDigitalInputBlock, addCDigitalOutputBlock, addDigitalInputBlock,
 %       addDigitalOutputBlock, addAnalogInputBlock, addAnalogOutputBlock,
-%       addSerialReceiveBlock, addSerialTransmitBlock, addStubBlock,
+%       addSerialReceiveBlock, addSerialTransmitBlock, addArduinoPioBoardBlocks,
 %       addInterruptSubsystem, addInternalResistorParameter, blockPosition
 %   MAT-files required: none
 %
@@ -100,19 +100,7 @@ function createArduinoPioLibrary()
         "arduinopio.blocks.avr.HardwareInterruptAvr", "hwint", 3);
 
     addSystemBlock(libName + "/Arduino Uno", "Uno IO Reference", "arduinopio.blocks.uno.IoReference", 1);
-
-    addStubBlock(libName + "/Mega 2560", "Mega 2560 extras", "Arduino Mega 2560", ...
-        ["Serial1", "Serial2", "Serial3", "More PWM/ADC pins"]);
-    addStubBlock(libName + "/Due", "Due extras", "Arduino Due", ...
-        ["Analog Output (DAC)", "On-board CAN", "Serial1-3"]);
-    addStubBlock(libName + "/MKR WiFi 1010", "MKR extras", "Arduino MKR WiFi 1010", ...
-        ["Analog Output", "WiFi TCP/UDP", "BLE"]);
-    addStubBlock(libName + "/ESP32-WROOM", "ESP32 extras", "ESP32-WROOM", ...
-        ["Analog Output", "WiFi TCP/UDP", "BLE", "Touch Sense"]);
-    addStubBlock(libName + "/Uno R4", "Uno R4 extras", "Arduino Uno R4", ...
-        ["Analog Output", "On-board CAN", "12x8 LED Matrix", "WiFi (WiFi model)"]);
-    addStubBlock(libName + "/Nano 33 BLE", "Nano 33 BLE extras", "Arduino Nano 33 BLE Sense", ...
-        ["Analog Output", "BLE Receive", "BLE Transmit"]);
+    addArduinoPioBoardBlocks(libName);
 
     save_system(libName, libPath);
     close_system(libName);
@@ -581,37 +569,6 @@ function addSerialTransmitBlock(parent, index)
     mask.addParameter(Type="edit", Name="BaudRate", Prompt="Baud rate", Value="9600");
     mask.addParameter(Type="edit", Name="SampleTime", Prompt="Sample time (-1 = inherited)", Value="-1");
     set_param(dest, "Parameters", "Port, BaudRate, SampleTime");
-end
-
-function addStubBlock(parent, name, boardName, extraBlocks)
-%ADDSTUBBLOCK - Add a BoardStub MATLAB System placeholder for board extras.
-%   Places arduinopio.blocks.BoardStub as the first block under parent, then sets
-%   BoardName and ExtraBlocks (comma-joined from the extraBlocks string array) so
-%   the mask lists planned board-specific features that are not yet implemented.
-%
-%   Syntax:
-%       addStubBlock(parent, name, boardName, extraBlocks)
-%
-%   Inputs:
-%       parent      - Board subsystem path (for example libName + "/Due")
-%       name        - Stub block name (for example "Due extras")
-%       boardName   - Display board name string
-%       extraBlocks - String array of planned feature labels
-%
-%   Outputs:
-%       none
-%
-%   Example:
-%       addStubBlock(libName + "/Due", "Due extras", "Arduino Due", ...
-%           ["Analog Output (DAC)", "On-board CAN", "Serial1-3"]);
-%
-%   See also: ADDSYSTEMBLOCK
-
-    addSystemBlock(parent, name, "arduinopio.blocks.BoardStub", 1);
-    dest = parent + "/" + name;
-    set_param(dest, "BoardName", boardName);
-    extraText = strjoin(extraBlocks, ",");
-    set_param(dest, "ExtraBlocks", extraText);
 end
 
 function addInterruptSubsystem(parent, name, className, kind, index)
