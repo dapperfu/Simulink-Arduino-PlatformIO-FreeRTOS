@@ -79,5 +79,5 @@ function info = uno()
         "Classic Uno R3 / ATmega328P only."
         "Prefer a WDT FreeRTOS tick so Timer1 and Timer2 stay available for PWM."
         "Timer1 is shared by PWM pins 9/10, Servo, and Input Capture on D8."
-        "CAN uses an MCP2515 on SPI. Default CS is pin 10; INT is unused because receive polls."];
+        "CAN uses an MCP2515 on SPI (autowp/autowp-mcp2515). Default CS is pin 10; a FreeRTOS RX task drains the controller so INT is unused."];
 end
