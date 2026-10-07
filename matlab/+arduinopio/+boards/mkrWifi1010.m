@@ -1,8 +1,8 @@
 function info = mkrWifi1010()
-%MKRWIFI1010 - Stub capability data for Arduino MKR WiFi 1010.
-%   Starts from the Uno map, then marks Implemented false and sets SAMD21
-%   features. Pin lists remain the Uno baseline until a dedicated map exists.
-%   Package path: arduinopio.boards.mkrWifi1010.
+%MKRWIFI1010 - Pin map for Arduino MKR WiFi 1010 (SAMD21).
+%   Starts from the Uno map, then sets SAMD21 pins, a 10-bit DAC on A0
+%   (digital pin 15), WiFiNINA, and ArduinoBLE. Package path:
+%   arduinopio.boards.mkrWifi1010.
 %
 %   Syntax:
 %       info = arduinopio.boards.mkrWifi1010()
@@ -11,13 +11,7 @@ function info = mkrWifi1010()
 %       none
 %
 %   Outputs:
-%       info - struct based on uno() with overrides:
-%           Name - "mkrWifi1010"; DisplayName - "Arduino MKR WiFi 1010";
-%           Mcu - "SAMD21"; Architecture - "samd"; Implemented - false;
-%           HasInputPulldown - true; HasDac - true; HasWifi - true; HasBle - true;
-%           EepromSize - 0; ExtraBlocks - Analog Output, WiFi TCP/UDP, BLE
-%           Receive/Transmit.
-%           Inherited: DigitalPins 0:19, PwmPins [3,5,6,9,10,11], UartCount 1.
+%       info - struct. Implemented true, DacPins 15, HasWifi true, HasBle true.
 %
 %   Example:
 %       info = arduinopio.boards.mkrWifi1010();
@@ -29,7 +23,7 @@ function info = mkrWifi1010()
 %   See also: UNO, GETBOARD, LISTBOARDS
 
 %   Author: Frey, Jed
-%   28-Sep-2026; Last revision: 28-Sep-2026
+%   07-Oct-2026; Last revision: 07-Oct-2026
 
 %------------- BEGIN CODE --------------
     info = arduinopio.boards.uno();
@@ -37,11 +31,28 @@ function info = mkrWifi1010()
     info.DisplayName = "Arduino MKR WiFi 1010";
     info.Mcu = "SAMD21";
     info.Architecture = "samd";
-    info.Implemented = false;
+    info.Implemented = true;
+    info.DigitalPins = 0:21;
+    info.AnalogPins = 15:21;
+    info.AnalogAsDigitalPins = 15:21;
+    info.PwmPins = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 18, 19];
+    info.InterruptPins = 0:21;
+    info.CapturePins = double.empty(1, 0);
+    info.UartCount = 2;
+    info.EepromSize = 0;
+    info.AdcBits = 12;
     info.HasInputPulldown = true;
     info.HasDac = true;
+    info.DacPins = 15;
+    info.DacBits = 10;
     info.HasWifi = true;
     info.HasBle = true;
-    info.EepromSize = 0;
-    info.ExtraBlocks = ["Analog Output", "WiFi TCP/UDP", "BLE Receive", "BLE Transmit"];
+    info.HasMcp2515 = false;
+    info.PwmTimers = struct("Pin", {}, "Timer", {}, "Channel", {});
+    info.ExtraBlocks = ["DAC Write", "WiFi UDP", "WiFi TCP", "BLE Transmit", "BLE Receive"];
+    info.Notes = [ ...
+        "SAMD21. A0 is digital pin 15 and is the 10-bit DAC."
+        "Analog pins A0-A6 are digital pins 15-21."
+        "WiFi uses the WiFiNINA library. BLE uses ArduinoBLE."
+        "This board has no EEPROM."];
 end
