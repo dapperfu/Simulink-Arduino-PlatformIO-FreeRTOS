@@ -2,8 +2,9 @@ function syncKnownTarget(hDlg, hSrc)
 %SYNCKNOWNTARGET - Fill platform and framework from the selected known board.
 %   Configuration UI callback for the PioBoard rtwoption (wired from
 %   getOptionTable). Reads PioBoard via getConfigValue, resolves it with
-%   resolveKnownTarget, and when isKnown is true writes PioPlatform and
-%   PioFramework from the known target. Unknown boards leave other fields
+%   resolveKnownTarget, and when isKnown is true writes PioPlatform,
+%   PioFramework, PioExtraLibraries, and PioTaskStackWords from the known
+%   target. Unknown boards leave other fields
 %   unchanged. Supports both slConfigUI* dialog APIs and hSrc get/set_param.
 %
 %   Syntax:
@@ -44,6 +45,8 @@ function syncKnownTarget(hDlg, hSrc)
 
     setConfigValue(hDlg, hSrc, "PioPlatform", target.Platform);
     setConfigValue(hDlg, hSrc, "PioFramework", target.Framework);
+    setConfigValue(hDlg, hSrc, "PioExtraLibraries", target.ExtraLibraries);
+    setConfigValue(hDlg, hSrc, "PioTaskStackWords", target.TaskStackWords);
 end
 
 function value = getConfigValue(hDlg, hSrc, parameterName)
