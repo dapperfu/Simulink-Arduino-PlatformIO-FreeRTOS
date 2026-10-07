@@ -295,8 +295,9 @@ classdef (Sealed) CanTransmit < matlab.System & coder.ExternalDependency
         end
 
         function updateBuildInfo(buildInfo, context)
-        %UPDATEBUILDINFO - Add CAN driver source and MCP2515 library dependency.
-        %   Calls updateDriverBuildInfo(buildInfo, context, "arduinopio_can.cpp", "MCP2515").
+        %UPDATEBUILDINFO - Add CAN driver source and autowp MCP2515 library dependency.
+        %   Calls updateDriverBuildInfo(buildInfo, context, "arduinopio_can.cpp", "MCP2515"),
+        %   which maps to PlatformIO lib_deps entry autowp/autowp-mcp2515.
         %
         %   Syntax:
         %       updateBuildInfo(buildInfo, context)
