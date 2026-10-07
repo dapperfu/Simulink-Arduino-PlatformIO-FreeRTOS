@@ -107,8 +107,10 @@ classdef tGetDefaultOptions < matlab.unittest.TestCase
             testCase.verifyEqual(platformOption.Type, "Popup");
             testCase.verifyEqual(boardOption.Type, "Popup");
             testCase.verifyEqual(frameworkOption.Type, "Popup");
-            testCase.verifyEqual(platformOption.PopupStrings, "atmelavr");
-            testCase.verifyEqual(boardOption.PopupStrings, "Arduino Uno|Arduino Nano");
+            testCase.verifyEqual(platformOption.PopupStrings, ...
+                "atmelavr|atmelsam|espressif32|renesas-ra|nordicnrf52");
+            testCase.verifyEqual(boardOption.PopupStrings, ...
+                "Arduino Uno|Arduino Nano|Arduino Mega 2560|Arduino Due|Arduino MKR WiFi 1010|ESP32-WROOM|Arduino Uno R4 WiFi|Arduino Nano 33 BLE");
             testCase.verifyEqual(frameworkOption.PopupStrings, "arduino");
             testCase.verifyEqual(boardOption.Callback, "piofrtos.syncKnownTarget(hDlg, hSrc)");
         end

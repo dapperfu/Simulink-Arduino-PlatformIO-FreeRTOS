@@ -37,10 +37,10 @@
   rtwoptions(oIdx).type           = 'Popup';
   rtwoptions(oIdx).enable         = 'on';
   rtwoptions(oIdx).default        = 'atmelavr';
-  rtwoptions(oIdx).popupstrings   = 'atmelavr';
+  rtwoptions(oIdx).popupstrings   = 'atmelavr|atmelsam|espressif32|renesas-ra|nordicnrf52';
   rtwoptions(oIdx).tlcvariable    = 'PioPlatform';
   rtwoptions(oIdx).makevariable   = 'PIO_PLATFORM';
-  rtwoptions(oIdx).tooltip        = 'PlatformIO platform for a known-good board. Atmel AVR boards use atmelavr.';
+  rtwoptions(oIdx).tooltip        = 'PlatformIO platform. Selecting a board fills this in.';
   rtwoptions(oIdx).callback       = '';
 
   oIdx = oIdx + 1;
@@ -48,10 +48,10 @@
   rtwoptions(oIdx).type           = 'Popup';
   rtwoptions(oIdx).enable         = 'on';
   rtwoptions(oIdx).default        = 'Arduino Uno';
-  rtwoptions(oIdx).popupstrings   = 'Arduino Uno|Arduino Nano';
+  rtwoptions(oIdx).popupstrings   = 'Arduino Uno|Arduino Nano|Arduino Mega 2560|Arduino Due|Arduino MKR WiFi 1010|ESP32-WROOM|Arduino Uno R4 WiFi|Arduino Nano 33 BLE';
   rtwoptions(oIdx).tlcvariable    = 'PioBoard';
   rtwoptions(oIdx).makevariable   = 'PIO_BOARD';
-  rtwoptions(oIdx).tooltip        = 'Known-good board. Selecting a board sets platform and framework.';
+  rtwoptions(oIdx).tooltip        = 'Board. Selecting a board sets platform, framework, libraries, and stack.';
   rtwoptions(oIdx).callback       = 'piofrtos.syncKnownTarget(hDlg, hSrc)';
 
   oIdx = oIdx + 1;
