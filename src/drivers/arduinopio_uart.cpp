@@ -4,8 +4,35 @@
 
 static HardwareSerial *selectPort(uint8_t port)
 {
+#if defined(ARDUINO_AVR_MEGA2560) || defined(__AVR_ATmega2560__) || defined(ARDUINO_ARCH_SAM)
+    switch (port) {
+    case 1:
+        return &Serial1;
+    case 2:
+        return &Serial2;
+    case 3:
+        return &Serial3;
+    default:
+        return &Serial;
+    }
+#elif defined(ARDUINO_ARCH_ESP32)
+    switch (port) {
+    case 1:
+        return &Serial1;
+    case 2:
+        return &Serial2;
+    default:
+        return &Serial;
+    }
+#elif defined(HAVE_HWSERIAL1)
+    if (port == 1) {
+        return &Serial1;
+    }
+    return &Serial;
+#else
     (void)port;
     return &Serial;
+#endif
 }
 
 extern "C" {
