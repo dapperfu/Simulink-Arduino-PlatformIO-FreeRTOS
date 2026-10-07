@@ -156,9 +156,21 @@ function [constantValue, dataType] = inputConstantForBlock(blockName)
 %
 %   See also: WIRELIBRARYBLOCK
     switch blockName
-        case {"Serial Transmit", "I2C Write", "SPI WriteRead", "CAN Transmit", "EEPROM Write"}
+        case {"Serial Transmit", "I2C Write", "SPI WriteRead", "CAN Transmit", "EEPROM Write", ...
+                "Serial 1 Transmit", "Serial 2 Transmit", "Serial 3 Transmit", ...
+                "WiFi UDP Transmit", "WiFi TCP Transmit", "BLE Transmit", "Mega PWM", ...
+                "PWM Analog Output"}
             constantValue = "uint8(0)";
             dataType = "uint8";
+        case {"Onboard CAN Transmit"}
+            constantValue = "uint8(zeros(8,1))";
+            dataType = "uint8";
+        case {"LED Matrix"}
+            constantValue = "uint8(zeros(12,1))";
+            dataType = "uint8";
+        case {"DAC Write"}
+            constantValue = "uint16(0)";
+            dataType = "uint16";
         case {"External Interrupt", "Hardware Interrupt AVR"}
             constantValue = "0";
             dataType = "boolean";
