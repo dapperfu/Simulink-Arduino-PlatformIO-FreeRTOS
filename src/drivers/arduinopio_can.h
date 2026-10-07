@@ -8,6 +8,7 @@ extern "C" {
 #endif
 
 void arduinopioCanSetup(uint8_t chipSelectPin, uint16_t baudKbps, uint8_t oscillatorMHz, uint8_t mode);
+void arduinopioCanSetReceiveTimeout(uint16_t timeoutMs);
 void arduinopioCanSetFilter(uint8_t extended, uint32_t identifier, uint32_t mask);
 uint8_t arduinopioCanSend(uint32_t identifier, uint8_t extended, uint8_t remote,
     const uint8_t *data, uint8_t length);
