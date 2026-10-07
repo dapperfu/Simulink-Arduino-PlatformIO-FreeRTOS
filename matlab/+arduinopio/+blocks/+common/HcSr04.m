@@ -1,8 +1,10 @@
 classdef (Sealed) HcSr04 < matlab.System & coder.ExternalDependency
-    %HCSR04 - Measure distance from an HC-SR04 ultrasonic sensor in centimeters.
-    %   TrigPin and EchoPin are digital GPIO. Default SampleTime is 0.01 s (10 ms).
-    %   Host simulation returns SimValue. Generated code pulses Trig and times Echo
-    %   via arduinopioHcSr04ReadCm. Timeout scales from MaxDistanceCm.
+    %HCSR04 - FreeRTOS HC-SR04 distance (cm) via a dedicated sensor task.
+    %   setupImpl starts arduinopioHcSr04Setup, which creates a FreeRTOS task that
+    %   owns Trig/Echo. The task period defaults to SampleTime (10 ms). stepImpl
+    %   only reads the latest non-blocking snapshot from arduinopioHcSr04ReadCm.
+    %   The driver uses micros() and optional echo ISR — not delayMicroseconds or
+    %   pulseIn. EchoPin should be interrupt-capable when the board exposes one.
     %
     %   Syntax:
     %       obj = arduinopio.blocks.common.HcSr04
@@ -10,16 +12,16 @@ classdef (Sealed) HcSr04 < matlab.System & coder.ExternalDependency
     %
     %   Inputs:
     %       TrigPin - (1,1) digital trigger pin. Default 9.
-    %       EchoPin - (1,1) digital echo pin. Default 8.
+    %       EchoPin - (1,1) digital echo pin. Default 2 (Uno external interrupt).
     %       MaxDistanceCm - (1,1) double timeout range in cm. Default 400.
     %       SimValue - (1,1) double host-simulation distance in cm. Default 0.
-    %       SampleTime - (1,1) double. Default 0.01 (10 ms).
+    %       SampleTime - (1,1) double. Default 0.01 (10 ms); also task period.
     %
     %   Outputs:
     %       distanceCm - scalar double distance in centimeters (0 on timeout).
     %
     %   Example:
-    %       obj = arduinopio.blocks.common.HcSr04(TrigPin=9, EchoPin=8);
+    %       obj = arduinopio.blocks.common.HcSr04(TrigPin=9, EchoPin=2);
     %
     %   Other m-files required: arduinopio.validatePin,
     %       arduinopio.updateDriverBuildInfo, arduinopio.iconWithPin
@@ -33,7 +35,7 @@ classdef (Sealed) HcSr04 < matlab.System & coder.ExternalDependency
 
     properties (Nontunable)
         TrigPin (1,1) {mustBeInteger, mustBeNonnegative} = 9
-        EchoPin (1,1) {mustBeInteger, mustBeNonnegative} = 8
+        EchoPin (1,1) {mustBeInteger, mustBeNonnegative} = 2
         MaxDistanceCm (1,1) double {mustBePositive} = 400
         SimValue (1,1) double = 0
         SampleTime (1,1) double = 0.01
@@ -63,7 +65,14 @@ classdef (Sealed) HcSr04 < matlab.System & coder.ExternalDependency
         function setupImpl(obj)
             if coder.target("Rtw")
                 coder.cinclude("arduinopio_hcsr04.h");
-                coder.ceval("arduinopioHcSr04Setup", uint8(obj.TrigPin), uint8(obj.EchoPin));
+                if obj.SampleTime == -1
+                    periodMs = uint16(10);
+                else
+                    periodMs = uint16(max(1, round(obj.SampleTime * 1000)));
+                end
+                coder.ceval("arduinopioHcSr04Setup", ...
+                    uint8(obj.TrigPin), uint8(obj.EchoPin), ...
+                    periodMs, uint16(obj.MaxDistanceCm));
             end
         end
 
@@ -71,10 +80,8 @@ classdef (Sealed) HcSr04 < matlab.System & coder.ExternalDependency
             distanceCm = obj.SimValue;
             if coder.target("Rtw")
                 coder.cinclude("arduinopio_hcsr04.h");
-                timeoutUs = uint32(ceil(obj.MaxDistanceCm * 58));
                 rawCm = single(0);
-                rawCm = coder.ceval("arduinopioHcSr04ReadCm", ...
-                    uint8(obj.TrigPin), uint8(obj.EchoPin), timeoutUs);
+                rawCm = coder.ceval("arduinopioHcSr04ReadCm");
                 distanceCm = double(rawCm);
             end
         end
