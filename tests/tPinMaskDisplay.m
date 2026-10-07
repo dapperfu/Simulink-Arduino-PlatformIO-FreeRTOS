@@ -172,12 +172,14 @@ classdef tPinMaskDisplay < matlab.unittest.TestCase
                 blockPath = blockPaths(blockIndex);
                 maskNames = string(get_param(blockPath, "MaskNames"));
                 if ~any(maskNames == "Pin") && ~any(maskNames == "ChipSelectPin") ...
-                        && ~any(maskNames == "PinA")
+                        && ~any(maskNames == "PinA") && ~any(maskNames == "TrigPin") ...
+                        && ~any(maskNames == "EchoPin")
                     continue
                 end
                 pinMasks(end+1, 1) = blockPath; %#ok<AGROW>
                 displayText = string(get_param(blockPath, "MaskDisplay"));
-                if ~contains(displayText, "Pin") && ~contains(displayText, "CS")
+                if ~contains(displayText, "Pin") && ~contains(displayText, "CS") ...
+                        && ~contains(displayText, "Trig") && ~contains(displayText, "Echo")
                     missingDisplay(end+1, 1) = blockPath + " display='" + displayText + "'"; %#ok<AGROW>
                 end
             end
