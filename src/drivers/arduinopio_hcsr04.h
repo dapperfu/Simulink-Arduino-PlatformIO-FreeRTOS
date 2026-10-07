@@ -7,8 +7,12 @@
 extern "C" {
 #endif
 
-void arduinopioHcSr04Setup(uint8_t trigPin, uint8_t echoPin);
-float arduinopioHcSr04ReadCm(uint8_t trigPin, uint8_t echoPin, uint32_t timeoutUs);
+/* Start a FreeRTOS task that owns Trig/Echo. periodMs is the task period. */
+void arduinopioHcSr04Setup(uint8_t trigPin, uint8_t echoPin, uint16_t periodMs,
+                           uint16_t maxDistanceCm);
+
+/* Non-blocking snapshot of the latest distance in centimeters (0 if none yet). */
+float arduinopioHcSr04ReadCm(void);
 
 #ifdef __cplusplus
 }
