@@ -28,8 +28,9 @@ function createArduinoPioLibrary()
 %       addDigitalIoMethodLibrary, addSystemDigitalIoBlock, addCSfunctionBlock,
 %       addCDigitalInputBlock, addCDigitalOutputBlock, addDigitalInputBlock,
 %       addDigitalOutputBlock, addAnalogInputBlock, addAnalogOutputBlock,
-%       addSerialReceiveBlock, addSerialTransmitBlock, addArduinoPioBoardBlocks,
-%       addInterruptSubsystem, addInternalResistorParameter, blockPosition
+%       addSerialReceiveBlock, addSerialTransmitBlock, addHcSr04Block,
+%       addArduinoPioBoardBlocks, addInterruptSubsystem, addInternalResistorParameter,
+%       blockPosition
 %   MAT-files required: none
 %
 %   See also: CREATEARDUINOPIOEXAMPLES, BUILD_ALL, INSTALLARDUINOPIO, SLBLOCKS
@@ -90,7 +91,7 @@ function createArduinoPioLibrary()
     addSystemBlock(common, "EEPROM Write", "arduinopio.blocks.common.EepromWrite", 18);
     addSystemBlock(common, "CAN Transmit", "arduinopio.blocks.common.CanTransmit", 19);
     addSystemBlock(common, "CAN Receive", "arduinopio.blocks.common.CanReceive", 20);
-    addSystemBlock(common, "HC-SR04", "arduinopio.blocks.common.HcSr04", 21);
+    addHcSr04Block(common, 21);
 
     addDigitalIoMethodLibrary(libName + "/Digital IO Methods");
 
@@ -570,6 +571,69 @@ function addSerialTransmitBlock(parent, index)
     mask.addParameter(Type="edit", Name="BaudRate", Prompt="Baud rate", Value="9600");
     mask.addParameter(Type="edit", Name="SampleTime", Prompt="Sample time (-1 = inherited)", Value="-1");
     set_param(dest, "Parameters", "Port, BaudRate, SampleTime");
+end
+
+function addHcSr04Block(parent, index)
+%ADDHCSR04BLOCK - Add a masked HC-SR04 ultrasonic distance library block.
+%   Places a subsystem around arduinopio.blocks.common.HcSr04 with a DistanceCm
+%   outport and a mask that promotes TrigPin, EchoPin, MaxDistanceCm, SimValue,
+%   and SampleTime (default 10 ms).
+%
+%   Syntax:
+%       addHcSr04Block(parent, index)
+%
+%   Inputs:
+%       parent - Parent subsystem path (usually Common)
+%       index  - Layout index for blockPosition
+%
+%   Outputs:
+%       none
+%
+%   Example:
+%       addHcSr04Block(common, 21);
+%
+%   See also: ADDSYSTEMBLOCK, CREATEARDUINOPIOLIBRARY
+
+    dest = parent + "/HC-SR04";
+    add_block("built-in/Subsystem", dest, Position=blockPosition(index));
+    innerBlocks = find_system(dest, LookUnderMasks="all", SearchDepth=1, Type="Block");
+    for i = 1:numel(innerBlocks)
+        blockPath = string(innerBlocks{i});
+        if blockPath ~= dest
+            delete_block(blockPath);
+        end
+    end
+
+    driver = dest + "/Driver";
+    add_block("simulink/User-Defined Functions/MATLAB System", driver, ...
+        Position=[140, 40, 300, 120]);
+    set_param(driver, "System", "arduinopio.blocks.common.HcSr04");
+    set_param(driver, ...
+        "TrigPin", "9", ...
+        "EchoPin", "2", ...
+        "MaxDistanceCm", "400", ...
+        "SimValue", "0", ...
+        "SampleTime", "0.01");
+
+    add_block("simulink/Sinks/Out1", dest + "/DistanceCm", Position=[360, 62, 390, 78]);
+    add_line(dest, "Driver/1", "DistanceCm/1");
+
+    mask = Simulink.Mask.create(dest);
+    mask.Type = "Arduino PIO HC-SR04";
+    mask.Description = "HC-SR04 ultrasonic distance in centimeters. A FreeRTOS task " + ...
+        "owns Trig/Echo; the block output is a non-blocking snapshot. Default sample " + ...
+        "time is 10 ms. Prefer an interrupt-capable EchoPin (Uno: 2 or 3).";
+    mask.Display = "fprintf('HC-SR04\\nTrig %g\\nEcho %g', TrigPin, EchoPin)";
+    mask.addParameter(Type="promote", TypeOptions={"Driver/TrigPin"}, Name="TrigPin", ...
+        Prompt="Trig pin");
+    mask.addParameter(Type="promote", TypeOptions={"Driver/EchoPin"}, Name="EchoPin", ...
+        Prompt="Echo pin");
+    mask.addParameter(Type="promote", TypeOptions={"Driver/MaxDistanceCm"}, Name="MaxDistanceCm", ...
+        Prompt="Max distance (cm)");
+    mask.addParameter(Type="promote", TypeOptions={"Driver/SimValue"}, Name="SimValue", ...
+        Prompt="Simulation distance (cm)");
+    mask.addParameter(Type="promote", TypeOptions={"Driver/SampleTime"}, Name="SampleTime", ...
+        Prompt="Sample time (s), default 0.01 = 10 ms");
 end
 
 function addInterruptSubsystem(parent, name, className, kind, index)
