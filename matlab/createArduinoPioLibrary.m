@@ -90,6 +90,7 @@ function createArduinoPioLibrary()
     addSystemBlock(common, "EEPROM Write", "arduinopio.blocks.common.EepromWrite", 18);
     addSystemBlock(common, "CAN Transmit", "arduinopio.blocks.common.CanTransmit", 19);
     addSystemBlock(common, "CAN Receive", "arduinopio.blocks.common.CanReceive", 20);
+    addSystemBlock(common, "HC-SR04", "arduinopio.blocks.common.HcSr04", 21);
 
     addDigitalIoMethodLibrary(libName + "/Digital IO Methods");
 
