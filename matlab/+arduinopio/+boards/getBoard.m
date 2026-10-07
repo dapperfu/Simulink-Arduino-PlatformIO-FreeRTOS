@@ -47,17 +47,19 @@ function info = getBoard(boardId)
             info = arduinopio.boards.uno();
         case {"nano", "arduino nano", "nanoatmega328", "nanoatmega328new"}
             info = arduinopio.boards.nano();
-        case {"mega2560", "mega", "arduino mega 2560"}
+        case {"mega2560", "mega", "arduino mega 2560", "megaatmega2560"}
             info = arduinopio.boards.mega2560();
         case {"due", "arduino due"}
             info = arduinopio.boards.due();
         case {"mkr", "mkrwifi1010", "arduino mkr wifi 1010"}
             info = arduinopio.boards.mkrWifi1010();
-        case {"esp32", "esp32-wroom"}
+        case {"esp32", "esp32wroom", "esp32-wroom", "esp32dev", "esp32-wroom-32"}
             info = arduinopio.boards.esp32Wroom();
-        case {"uno r4", "unor4", "uno r4 minima", "uno r4 wifi"}
+        case {"uno r4", "unor4", "uno r4 minima", "uno r4 wifi", ...
+                "arduino uno r4", "arduino uno r4 wifi"}
             info = arduinopio.boards.unoR4();
-        case {"nano33ble", "nano 33 ble"}
+        case {"nano33ble", "nano 33 ble", "arduino nano 33 ble", ...
+                "arduino nano 33 ble sense"}
             info = arduinopio.boards.nano33Ble();
         otherwise
             warning("arduinopio:UnknownBoard", ...
