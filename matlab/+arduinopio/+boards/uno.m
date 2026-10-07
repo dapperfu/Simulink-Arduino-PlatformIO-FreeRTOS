@@ -62,6 +62,10 @@ function info = uno()
     info.HasOnboardCan = false;
     info.HasMcp2515 = true;
     info.HasLedMatrix = false;
+    info.DacPins = double.empty(1, 0);
+    info.DacBits = 0;
+    info.TouchPins = double.empty(1, 0);
+    info.CanControllerCount = 0;
     info.BuiltinLedPin = 13;
     info.PwmTimers = [ ...
         struct("Pin", 3, "Timer", 2, "Channel", "B"), ...
